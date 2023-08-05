@@ -15,6 +15,9 @@ pytest = "^7.4.0"
 black = "^23.7.0"
 ruff = "^0.0.282"
 
+[tool.poetry.scripts]
+viewer = "viewer:run"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
