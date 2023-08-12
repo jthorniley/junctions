@@ -23,13 +23,22 @@ class Scene:
 
     @staticmethod
     def draw_road(road: Road):
-        height = (road.b.start[1] - road.a.end[1]) * 2.0
-        width = road.a.end[0] - road.a.start[0]
-        center_x = road.a.start[0] + width / 2.0
-        center_y = road.a.start[1] + height / 2.0
-        color = arcade.color.GRAY
+        shape = Scene.create_road_shape(road)
+        shape.draw()
 
-        arcade.draw_rectangle_filled(center_x, center_y, width, height, color)
+    @staticmethod
+    def create_road_shape(road: Road) -> arcade.Shape:
+        a_vec = road.a.end - road.a.start
+        perp_vec = road.b.end - road.a.start
+
+        x0 = road.a.start - perp_vec / 2
+        x1 = x0 + a_vec
+        x2 = x1 + perp_vec * 2
+        x3 = x2 - a_vec
+
+        return arcade.create_rectangle_filled_with_colors(
+            [x0, x1, x2, x3], [arcade.color.BLUE] * 4
+        )
 
 
 class JunctionsWindow(arcade.Window):
@@ -37,7 +46,7 @@ class JunctionsWindow(arcade.Window):
 
     def __init__(self):
         screens = arcade.get_screens()
-        super().__init__(800, 800, "Junctions", screen=screens[0])
+        super().__init__(400, 400, "Junctions", screen=screens[0])
 
         self.background_color = arcade.color.BUD_GREEN
         self.scene = Scene()
@@ -53,7 +62,8 @@ class JunctionsWindow(arcade.Window):
 def run():
     window = JunctionsWindow()
 
-    example_road = create_road(np.array([5, 20]), road_length=80, lane_separation=10)
+    example_road = create_road(np.array([5, 10]), road_length=80, lane_separation=10)
+    print(example_road)
     window.scene.add_road(example_road)
 
     window.run()
