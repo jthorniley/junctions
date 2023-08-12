@@ -101,10 +101,14 @@ def run():
         create_road(np.array([5, 10]), road_length=80, lane_separation=10)
     )
     window.scene.add_road(
-        create_road(np.array([15, 30]), road_length=84, lane_separation=8)
+        create_road(
+            np.array([15, 30]), road_length=84, lane_separation=8, bearing=np.pi / 4
+        )
     )
     window.scene.add_road(
-        create_road(np.array([85, 50]), road_length=-40, lane_separation=8)
+        create_road(
+            np.array([85, 50]), road_length=40, lane_separation=8, bearing=np.pi * 5 / 4
+        )
     )
 
     window.run()
