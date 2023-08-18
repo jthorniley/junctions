@@ -13,7 +13,12 @@ junctions in various ways using some simulations.
 The simplest junction is no junction - just a road with vehicles going
 back and forwards.
 
-So define two lanes, A and B, and start/end points for each in 2-D space. 
-The road is defined by a road length $r$ and separation between lanes $s$.
+We can name two lanes $a$ and $b$ and assume that vehicles will one
+day traverse them from start to end. 
+
+The lane start is a 2D coordinates $a_0$ (or $b_0$)
+and end at coordinates $a_1$ (or $b_1$). In the diagram below we also
+label the road length $l$ and separation $s$ (being the distance
+in-between the two lanes).
 
 ![](images/a-b.png)
