@@ -3,7 +3,7 @@ from typing import Sequence
 
 from junctions.types import Road
 from pyglet import app, graphics, shapes, window
-from pyglet.math import Vec2
+from pyglet.math import Mat4, Vec2, Vec3
 
 
 class Scene:
@@ -43,6 +43,8 @@ def on_draw():
 
 
 def run():
+    # Double the scale
+    win.view = Mat4.from_scale(Vec3(2, 2, 1))
     scene.add_junction(Road((20, 10), bearing=0, road_length=100, lane_separation=8))
     scene.add_junction(
         Road((50, 10), bearing=math.pi / 2, road_length=100, lane_separation=8)
