@@ -1,9 +1,7 @@
 from dataclasses import dataclass
 
-from pyglet.math import Vec2
 
-
-@dataclass
+@dataclass(frozen=True)
 class Road:
     """Create a single road.
 
@@ -20,7 +18,7 @@ class Road:
     ![](images/a-b.png)
     """
 
-    origin: Vec2
+    origin: tuple[float, float]
     bearing: float
     road_length: float
     lane_separation: float
