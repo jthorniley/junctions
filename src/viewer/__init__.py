@@ -1,114 +1,55 @@
-import arcade
-import arcade.color
-import numpy as np
-from junctions.primitives import create_road
+import math
+from typing import Sequence
+
 from junctions.types import Road
+from pyglet import app, graphics, shapes, window
+from pyglet.math import Mat4, Vec2, Vec3
 
 
 class Scene:
-    roads: list[Road]
-
     def __init__(self):
-        self.roads = []
+        self.junctions: dict[Road, Sequence[shapes.ShapeBase]] = {}
+        self.batch: graphics.Batch = graphics.Batch()
 
-    def add_road(self, road: Road):
-        self.roads.append(road)
+    def add_junction(self, junction: Road):
+        a0 = Vec2(*junction.origin)
+        course = Vec2(0, junction.road_length).rotate(-junction.bearing)
+        a1 = a0 + course
+        separation = Vec2(-junction.lane_separation, 0).rotate(-junction.bearing)
+        b0 = a1 + separation
+        b1 = a0 + separation
+
+        lane_a = shapes.Line(
+            a0.x, a0.y, a1.x, a1.y, color=(103, 240, 90, 255), batch=self.batch
+        )
+        lane_b = shapes.Line(
+            b0.x, b0.y, b1.x, b1.y, color=(103, 240, 90, 255), batch=self.batch
+        )
+
+        self.junctions[junction] = (lane_a, lane_b)
 
     def draw(self):
-        self.draw_roads()
-
-    def draw_roads(self):
-        for road in self.roads:
-            Scene.draw_road(road)
-
-    @staticmethod
-    def draw_road(road: Road):
-        shape = Scene.create_road_shape(road)
-        shape.draw()
-
-    @staticmethod
-    def create_road_shape(road: Road) -> arcade.ShapeElementList:
-        a_vec = road.a.end - road.a.start
-        perp_vec = road.b.end - road.a.start
-
-        x0 = road.a.start - perp_vec / 2
-        x1 = x0 + a_vec
-        x2 = x1 + perp_vec * 2
-        x3 = x2 - a_vec
-
-        shape_list = arcade.ShapeElementList()
-
-        base = arcade.create_rectangle_filled_with_colors(
-            [x0, x1, x2, x3], [arcade.color.GRAY] * 4
-        )
-        shape_list.append(base)
-
-        # Make centre line - in between lanes.
-        cline_block_len = 5
-        cline_block_width = 1
-
-        road_start_midpoint = (road.a.start + road.b.end) / 2
-        road_length = np.linalg.norm(a_vec)
-        road_direction = a_vec / road_length
-        perp_direction = perp_vec / np.linalg.norm(perp_vec)
-
-        block_starts = np.arange(0, road_length, cline_block_len * 1.5)
-        block_ends = np.arange(cline_block_len, road_length, cline_block_len * 1.5)
-
-        if block_ends.shape[0] < block_starts.shape[0]:
-            block_ends = np.concatenate([block_ends, [road_length]])
-
-        for block_start, block_end in zip(block_starts, block_ends):
-            cline_x0 = road_start_midpoint + block_start * road_direction
-            cline_x1 = road_start_midpoint + block_end * road_direction
-
-            cline_shape = arcade.create_rectangle_filled_with_colors(
-                [
-                    cline_x0 - perp_direction * cline_block_width * 0.5,
-                    cline_x1 - perp_direction * cline_block_width * 0.5,
-                    cline_x1 + perp_direction * cline_block_width * 0.5,
-                    cline_x0 + perp_direction * cline_block_width * 0.5,
-                ],
-                [arcade.color.WHITE] * 4,
-            )
-            shape_list.append(cline_shape)
-
-        return shape_list
+        self.batch.draw()
 
 
-class JunctionsWindow(arcade.Window):
-    scene: Scene = Scene()
+win = window.Window(width=500, height=500)
+scene = Scene()
 
-    def __init__(self):
-        screens = arcade.get_screens()
-        super().__init__(400, 400, "Junctions", screen=screens[0])
 
-        self.background_color = arcade.color.BUD_GREEN
-        self.scene = Scene()
-
-    def on_draw(self):
-        self.clear()
-        self.set_viewport(0, 200, 0, 200)
-        self.scene.draw()
-
-        super().on_draw()
+@win.event
+def on_draw():
+    win.clear()
+    scene.draw()
 
 
 def run():
-    window = JunctionsWindow()
-
-    window.scene.add_road(
-        create_road(np.array([5, 10]), road_length=80, lane_separation=10)
+    # Double the scale
+    win.view = Mat4.from_scale(Vec3(2, 2, 1))
+    scene.add_junction(Road((20, 10), bearing=0, road_length=100, lane_separation=8))
+    scene.add_junction(
+        Road((50, 10), bearing=math.pi / 2, road_length=100, lane_separation=8)
     )
-    window.scene.add_road(
-        create_road(
-            np.array([15, 30]), road_length=84, lane_separation=8, bearing=np.pi / 4
-        )
+    scene.add_junction(
+        Road((50, 150), bearing=3 * math.pi / 4, road_length=140, lane_separation=8)
     )
-    window.scene.add_road(
-        create_road(
-            np.array([85, 50]), road_length=40, lane_separation=8, bearing=np.pi * 5 / 4
-        )
-    )
-
-    window.run()
+    app.run()

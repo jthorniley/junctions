@@ -1,19 +1,24 @@
 from dataclasses import dataclass
-from typing import TypeAlias
-
-import numpy as np
-from numpy.typing import NDArray
-
-Point2: TypeAlias = NDArray[np.float32]
 
 
-@dataclass
-class Lane:
-    start: Point2
-    end: Point2
-
-
-@dataclass
+@dataclass(frozen=True)
 class Road:
-    a: Lane
-    b: Lane
+    """Create a single road.
+
+    The origin is the start of the A lane. The B lane will be separated by
+    `lane_separation` meters. The `road_length` is the length of the lanes.
+
+    `bearing` is the angle north that the A lane travels:
+
+    * 0 -> A runs south-north (towards +ve y)
+    * PI/2 -> A runs east-west (towards +ve x)
+    * PI -> A runs north-south (towards -ve y)
+    * etc
+
+    ![](images/a-b.png)
+    """
+
+    origin: tuple[float, float]
+    bearing: float
+    road_length: float
+    lane_separation: float
