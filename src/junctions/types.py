@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import TypeAlias
 
 
 @dataclass(frozen=True)
@@ -51,3 +52,6 @@ class Arc:
     arc_length: float
     arc_radius: float
     lane_separation: float
+
+
+Junction: TypeAlias = Road | Arc
