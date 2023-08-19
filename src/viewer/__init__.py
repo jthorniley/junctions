@@ -13,36 +13,40 @@ class Scene:
 
     def add_junction(self, junction: Junction):
         match junction:
-            case Road(origin, bearing, road_length, lane_separation):
-                a0 = Vec2(*origin)
-                course = Vec2(0, road_length).rotate(-bearing)
-                a1 = a0 + course
-                separation = Vec2(-lane_separation, 0).rotate(-bearing)
-                b0 = a1 + separation
-                b1 = a0 + separation
-
+            case Road():
+                lanes = junction.lanes
                 lane_a = shapes.Line(
-                    a0.x, a0.y, a1.x, a1.y, color=(103, 240, 90, 255), batch=self.batch
+                    lanes[0].start.x,
+                    lanes[0].start.y,
+                    lanes[0].end.x,
+                    lanes[0].end.y,
+                    color=(103, 240, 90, 255),
+                    batch=self.batch,
                 )
                 lane_b = shapes.Line(
-                    b0.x, b0.y, b1.x, b1.y, color=(103, 240, 90, 255), batch=self.batch
+                    lanes[1].start.x,
+                    lanes[1].start.y,
+                    lanes[1].end.x,
+                    lanes[1].end.y,
+                    color=(103, 240, 90, 255),
+                    batch=self.batch,
                 )
 
                 self.junctions[junction] = (lane_a, lane_b)
-            case Arc(origin, bearing, arc_length, arc_radius, lane_separation):
-                # The origin is the a_0 point, we need to work out
-                # the focal point of the arc
-                a0 = Vec2(*origin)
-                origin_tangent = Vec2(0, 1).rotate(-bearing)
-                origin_normal = origin_tangent.rotate(math.pi / 2)
-                focus = a0 - origin_normal * arc_radius
+            case Arc():
+                lanes = junction.lanes
+                a0 = lanes[0].start
+                b1 = lanes[1].end
+                focus = junction.focus
 
                 def make_line(start_point, r):
                     point = start_point
                     lines = []
                     n_points = int(max(10, (r**2) / 10))
                     for i in range(n_points):
-                        angle = -bearing - arc_length * (i / (n_points - 1))
+                        angle = -junction.bearing - junction.arc_length * (
+                            i / (n_points - 1)
+                        )
                         next_point = focus + Vec2(-r, 0).rotate(angle)
                         lines.append(
                             shapes.Line(
@@ -58,9 +62,9 @@ class Scene:
 
                     return lines
 
-                lane_a = make_line(a0, arc_radius)
-                b_radius = arc_radius + lane_separation
-                lane_b = make_line(focus + origin_normal * b_radius, b_radius)
+                lane_a = make_line(a0, junction.arc_radius)
+                b_radius = junction.arc_radius + junction.lane_separation
+                lane_b = make_line(b1, b_radius)
                 self.junctions[junction] = (*lane_a, *lane_b)
 
     def draw(self):
