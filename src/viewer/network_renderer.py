@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import Sequence
+from typing import Mapping, Sequence
 
 import pyglet
-from junctions.network import Network
 from junctions.types import Arc, Junction, Lane, Road
 from pyglet.math import Vec2
 
@@ -98,22 +97,13 @@ def _arc_shapes(
 
 
 class NetworkRenderer:
-    def __init__(self, network: Network):
-        self._network: Network = network
-
+    def __init__(self, junctions: Mapping[str, Junction]):
         self._junctions: dict[str, Sequence[pyglet.shapes.ShapeBase]] = {}
         self._batch: pyglet.graphics.Batch = pyglet.graphics.Batch()
-
-    def _refresh_batch(self):
-        junction_lookup = self._network.junction_lookup
-        if junction_lookup.keys() != self._junctions.keys():
-            self._junctions = {}
-            self._batch = pyglet.graphics.Batch()
-            for label, junction in junction_lookup.items():
-                self._add_junction(label, junction)
+        for label, junction in junctions.items():
+            self._add_junction(label, junction)
 
     def draw(self):
-        self._refresh_batch()
         self._batch.draw()
 
     def _add_junction(self, label: str, junction: Junction):

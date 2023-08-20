@@ -10,16 +10,8 @@ from viewer.network_renderer import NetworkRenderer
 
 def run():
     win = window.Window(width=500, height=500)
+
     network = Network()
-    network_renderer = NetworkRenderer(network)
-
-    @win.event
-    def on_draw():
-        win.clear()
-        network_renderer.draw()
-
-    # Double the scale
-    win.view = Mat4.from_scale(Vec3(2, 2, 1))
 
     road_a = Road((20, 50), bearing=math.pi / 2, road_length=40, lane_separation=8)
     road_b = Road((60, 50), bearing=math.pi / 2, road_length=28, lane_separation=8)
@@ -52,4 +44,15 @@ def run():
     network.add_junction(curve_a)
     network.add_junction(curve_b)
     network.add_junction(road_d)
+
+    network_renderer = NetworkRenderer(network.junction_lookup)
+
+    # Double the scale
+    win.view = Mat4.from_scale(Vec3(2, 2, 1))
+
+    @win.event
+    def on_draw():
+        win.clear()
+        network_renderer.draw()
+
     app.run()

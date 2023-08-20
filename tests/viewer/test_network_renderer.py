@@ -75,73 +75,7 @@ def test_render_road_arc(reference_render: ReferenceRender, _fuzz):
     network.add_junction(ArcFactory.build())
 
     # WHEN I render the network
-    NetworkRenderer(network).draw()
+    NetworkRenderer(network.junction_lookup).draw()
 
     # THEN the network is as expected
-    reference_render.assert_screenshots_match()
-
-
-@pytest.mark.skipif(SKIP_RENDERING_TESTS, reason="SKIP_RENDERING_TESTS env set")
-def test_render_change_in_network(reference_render: ReferenceRender):
-    # GIVEN a network with a road junction
-    network = Network()
-
-    # AND a network renderer
-    network_renderer = NetworkRenderer(network)
-
-    # WHEN I add the junction after the renderer is created
-    network.add_junction(RoadFactory.build())
-
-    # AND render it
-    network_renderer.draw()
-
-    # THEN the network is as expected
-    reference_render.assert_screenshots_match()
-
-
-@pytest.mark.skipif(SKIP_RENDERING_TESTS, reason="SKIP_RENDERING_TESTS env set")
-def test_render_change_in_network_only_if_necessary(reference_render: ReferenceRender):
-    """This tests that the network renderer only refreshes its shape batch
-    when necessary (i.e. if the underlying network has changed)
-    """
-    # GIVEN a network with a road junction
-    network = Network()
-
-    # AND a network renderer
-    network_renderer = NetworkRenderer(network)
-
-    with mock.patch.object(
-        network_renderer, "_add_junction", side_effect=network_renderer._add_junction
-    ) as add_junction:
-        # WHEN I add the junction after the renderer is created
-        network.add_junction(RoadFactory.build())
-
-        # AND render it
-        network_renderer.draw()
-
-        # THEN add junction is called in the renderer
-        add_junction.assert_called_once_with("road1", network.junction_lookup["road1"])
-        add_junction.reset_mock()
-
-        # AND WHEN I render it again
-        network_renderer.draw()
-
-        # THEN no new shapes need to be created
-        add_junction.assert_not_called()
-        add_junction.reset_mock()
-
-        # AND WHEN I add another junction and render
-        network.add_junction(RoadFactory.build())
-
-        # AND render it
-        network_renderer.draw()
-
-        # THEN the junctions are added again
-        add_junction.assert_has_calls(
-            [
-                mock.call("road1", network.junction_lookup["road1"]),
-                mock.call("road2", network.junction_lookup["road2"]),
-            ]
-        )
-
     reference_render.assert_screenshots_match()
