@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 from io import BytesIO
-from unittest import mock
 
 import pyglet
 import pytest
