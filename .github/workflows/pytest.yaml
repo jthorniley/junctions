@@ -6,6 +6,10 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+
+    env:
+      DISPLAY: ':99'
+      
     strategy:
       matrix:
         python-version: ["3.11"]
@@ -27,4 +31,5 @@ jobs:
           poetry run ruff --format=github --target-version=py311 .
       - name: Test with pytest
         run: |
+          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
           poetry run pytest
