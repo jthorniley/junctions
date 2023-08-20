@@ -1,31 +1,7 @@
-import math
-import random
-
 import pytest
-from factory import Factory, LazyFunction
 from junctions.network import Network
-from junctions.types import Arc, Road
 
-
-class RoadFactory(Factory):
-    class Meta:
-        model = Road
-
-    origin = LazyFunction(lambda: (random.random() * 100, random.random() * 100))
-    bearing = LazyFunction(lambda: (random.random() * 2 * math.pi))
-    road_length = LazyFunction(lambda: (random.random() * 100))
-    lane_separation = LazyFunction(lambda: (random.random() * 10))
-
-
-class ArcFactory(Factory):
-    class Meta:
-        model = Arc
-
-    origin = LazyFunction(lambda: (random.random() * 100, random.random() * 100))
-    bearing = LazyFunction(lambda: (random.random() * math.pi))
-    arc_length = LazyFunction(lambda: (random.random() * math.pi))
-    arc_radius = LazyFunction(lambda: (random.random() * 20))
-    lane_separation = LazyFunction(lambda: (random.random() * 10))
+from tests.junctions.factories import ArcFactory, RoadFactory
 
 
 def test_add_road_to_network():

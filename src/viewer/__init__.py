@@ -100,17 +100,15 @@ class Scene:
         self.batch.draw()
 
 
-win = window.Window(width=500, height=500)
-scene = Scene()
-
-
-@win.event
-def on_draw():
-    win.clear()
-    scene.draw()
-
-
 def run():
+    win = window.Window(width=500, height=500)
+    scene = Scene()
+
+    @win.event
+    def on_draw():
+        win.clear()
+        scene.draw()
+
     # Double the scale
     win.view = Mat4.from_scale(Vec3(2, 2, 1))
     road_a = Road((20, 50), bearing=math.pi / 2, road_length=40, lane_separation=8)
