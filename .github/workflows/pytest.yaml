@@ -7,9 +7,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    env:
-      SKIP_RENDERING_TESTS: "1"
-
     strategy:
       matrix:
         python-version: ["3.11"]
@@ -31,4 +28,4 @@ jobs:
           poetry run ruff --format=github --target-version=py311 .
       - name: Test with pytest
         run: |
-          poetry run pytest
+          env SKIP_RENDERING_TESTS=1 poetry run pytest

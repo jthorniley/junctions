@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 from io import BytesIO
 from unittest import mock
@@ -64,7 +66,7 @@ def reference_render(request, pyglet_win: pyglet.window.Window):
     yield ReferenceRender(request)
 
 
-@pytest.mark.skipif(SKIP_RENDERING_TESTS, "SKIP_RENDERING_TESTS env set")
+@pytest.mark.skipif(SKIP_RENDERING_TESTS, reason="SKIP_RENDERING_TESTS env set")
 @pytest.mark.parametrize("_fuzz", range(20))  # implicitly 20 random seeds
 def test_render_road_arc(reference_render: ReferenceRender, _fuzz):
     # GIVEN a network with a road and arc junction
@@ -79,7 +81,7 @@ def test_render_road_arc(reference_render: ReferenceRender, _fuzz):
     reference_render.assert_screenshots_match()
 
 
-@pytest.mark.skipif(SKIP_RENDERING_TESTS, "SKIP_RENDERING_TESTS env set")
+@pytest.mark.skipif(SKIP_RENDERING_TESTS, reason="SKIP_RENDERING_TESTS env set")
 def test_render_change_in_network(reference_render: ReferenceRender):
     # GIVEN a network with a road junction
     network = Network()
@@ -97,7 +99,8 @@ def test_render_change_in_network(reference_render: ReferenceRender):
     reference_render.assert_screenshots_match()
 
 
-def test_render_change_in_network_only_if_necessary():
+@pytest.mark.skipif(SKIP_RENDERING_TESTS, reason="SKIP_RENDERING_TESTS env set")
+def test_render_change_in_network_only_if_necessary(reference_render: ReferenceRender):
     """This tests that the network renderer only refreshes its shape batch
     when necessary (i.e. if the underlying network has changed)
     """
@@ -140,3 +143,5 @@ def test_render_change_in_network_only_if_necessary():
                 mock.call("road2", network.junction_lookup["road2"]),
             ]
         )
+
+    reference_render.assert_screenshots_match()
