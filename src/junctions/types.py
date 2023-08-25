@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 from functools import cached_property
 from typing import TypeAlias
@@ -95,4 +96,53 @@ class Arc:
         return a0 - origin_normal * self.arc_radius
 
 
-Junction: TypeAlias = Road | Arc
+@dataclass(frozen=True)
+class Tee:
+    """A T-Junction which is a composite of a straight road and two arcs that allow
+    diverting to or from a side road at right angles.
+
+    Parameters:
+        origin: origin of the main road
+        bearing: bearing of the main road
+        main_road_length: length of the main road section that is within the junction
+        lane_separation: lane separation on both roads
+
+    The parameters of the components are constrained by the above.
+    """
+
+    origin: tuple[float, float]
+    main_road_bearing: float
+    main_road_length: float
+    lane_separation: float
+
+    @cached_property
+    def main_road(self) -> Road:
+        return Road(
+            self.origin,
+            self.main_road_bearing,
+            self.main_road_length,
+            self.lane_separation,
+        )
+
+    @cached_property
+    def branch_a(self) -> Arc:
+        return Arc(
+            origin=self.origin,
+            bearing=self.main_road_bearing,
+            arc_length=math.pi / 2,
+            arc_radius=(self.main_road_length - self.lane_separation) / 2,
+            lane_separation=self.lane_separation,
+        )
+
+    @cached_property
+    def branch_b(self) -> Arc:
+        return Arc(
+            origin=(*self.branch_a.lanes[1].start,),
+            bearing=self.main_road_bearing - math.pi / 2,
+            arc_length=math.pi / 2,
+            arc_radius=self.branch_a.arc_radius,
+            lane_separation=self.lane_separation,
+        )
+
+
+Junction: TypeAlias = Road | Arc | Tee

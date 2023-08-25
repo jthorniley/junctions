@@ -1,7 +1,7 @@
 import math
 
 from junctions.network import Network
-from junctions.types import Arc, Road
+from junctions.types import Road, Tee
 from pyglet import app, window
 from pyglet.math import Mat4, Vec3
 
@@ -13,37 +13,24 @@ def run():
 
     network = Network()
 
-    road_a = Road((20, 50), bearing=math.pi / 2, road_length=40, lane_separation=8)
-    road_b = Road((60, 50), bearing=math.pi / 2, road_length=28, lane_separation=8)
-    road_c = Road((88, 50), bearing=math.pi / 2, road_length=40, lane_separation=8)
-
-    curve_a = Arc(
-        (70, 68),
+    road = Road((20, 100), bearing=math.pi / 2, road_length=100, lane_separation=6)
+    tee = Tee(
+        (120, 100),
+        main_road_bearing=math.pi / 2,
+        main_road_length=20,
+        lane_separation=6,
+    )
+    road1 = Road((140, 100), bearing=math.pi / 2, road_length=80, lane_separation=6)
+    road2 = Road(
+        (*tee.branch_a.lanes[0].end,),
         bearing=math.pi,
-        arc_radius=10,
-        arc_length=math.pi / 2,
-        lane_separation=8,
-    )
-    curve_b = Arc(
-        (88, 58),
-        bearing=3 * math.pi / 2,
-        arc_radius=10,
-        arc_length=math.pi / 2,
-        lane_separation=8,
-    )
-
-    road_d = Road(
-        (curve_a.lanes[1].end.x, curve_a.lanes[1].end.y),
-        bearing=0,
         road_length=50,
-        lane_separation=8,
+        lane_separation=6,
     )
-    network.add_junction(road_a)
-    network.add_junction(road_b)
-    network.add_junction(road_c)
-    network.add_junction(curve_a)
-    network.add_junction(curve_b)
-    network.add_junction(road_d)
+    network.add_junction(road)
+    network.add_junction(tee)
+    network.add_junction(road1)
+    network.add_junction(road2)
 
     network_renderer = NetworkRenderer(network.junction_lookup)
 
