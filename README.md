@@ -50,3 +50,15 @@ $\theta+\phi$.
 
 ![](images/arc.png)
 
+## T-Junction
+
+
+A T-Junction is generally a connection between two roads - a "main"
+road and a "side" road. If we make the simplifying assumption that
+the main road and side road are the same width, and the side road is
+perpendicular, then a T-junction is fairly trivial to construct by
+combining a section of straight road (for vehicles staying on the
+main road) with two arc-shape roads (for vehicles leaving or entering
+the side road).
+
+![](images/t-junc.png)

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Mapping, Sequence
 
 import pyglet
-from junctions.types import Arc, Junction, Lane, Road
+from junctions.types import Arc, Junction, Lane, Road, Tee
 from pyglet.math import Vec2
 
 
@@ -96,6 +96,16 @@ def _arc_shapes(
     )
 
 
+def _tee_shapes(
+    tee: Tee, batch: pyglet.graphics.Batch
+) -> Sequence[pyglet.shapes.ShapeBase]:
+    return (
+        *_road_shapes(tee.main_road, batch),
+        *_arc_shapes(tee.branch_a, batch),
+        *_arc_shapes(tee.branch_b, batch),
+    )
+
+
 class NetworkRenderer:
     def __init__(self, junctions: Mapping[str, Junction]):
         self._junctions: dict[str, Sequence[pyglet.shapes.ShapeBase]] = {}
@@ -113,3 +123,6 @@ class NetworkRenderer:
 
             case Arc():
                 self._junctions[label] = _arc_shapes(junction, self._batch)
+
+            case Tee():
+                self._junctions[label] = _tee_shapes(junction, self._batch)
