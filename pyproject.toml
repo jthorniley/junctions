@@ -1,3 +1,12 @@
+[project]
+name = "junctions"
+version = "0.1.0"
+description = ""
+authors = ["James Thorniley <james.thorniley@gmail.com>"]
+readme = "README.md"
+requires-python = ">=3.11"
+license = {file = "LICENSE"}
+
 [tool.poetry]
 name = "junctions"
 version = "0.1.0"
