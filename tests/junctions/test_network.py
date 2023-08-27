@@ -149,8 +149,13 @@ def test_connectivity():
 
     # WHEN I connect the roads together
     network.connect_lanes("road1", "a", "road2", "a")
-    network.connect_lanes("road1", "a", "road3", "a")
     network.connect_lanes("road1", "b", "road2", "b")
+    # THEN I can query the connectivity
+    assert network.connected_lanes("road1", "a") == (("road2", "a"),)
+    assert network.connected_lanes("road1", "b") == (("road2", "b"),)
+
+    # WHEN I connect more lanes...
+    network.connect_lanes("road1", "a", "road3", "a")
     network.connect_lanes("road1", "b", "road3", "b")
 
     # THEN I can query the connectivity
