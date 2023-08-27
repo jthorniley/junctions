@@ -122,7 +122,9 @@ True
 
 Finally, the `connect_lanes` method lets us join two lanes,
 identifying each one by the road label/lane label pair.
-
+Implicitly, we are always going to be connecting a lane end to
+a lane start, so this is sufficient information to define the
+connectivity.
 
 ```python
 >>> # Connect J1A end to J2A start
