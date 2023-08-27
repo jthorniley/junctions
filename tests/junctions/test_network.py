@@ -136,3 +136,27 @@ def test_get_lane_labels_road():
 
     # THEN the result is the lane labels for the road
     assert labels == ("a", "b")
+
+
+def test_connectivity():
+    # GIVEN a network
+    network = Network()
+
+    # ... with 3 roads
+    roads = RoadFactory.build_batch(3)
+    for road in roads:
+        network.add_junction(road)
+
+    # WHEN I connect the roads together
+    network.connect_lanes("road1", "a", "road2", "a")
+    network.connect_lanes("road1", "a", "road3", "a")
+    network.connect_lanes("road1", "b", "road2", "b")
+    network.connect_lanes("road1", "b", "road3", "b")
+
+    # THEN I can query the connectivity
+    assert network.connected_lanes("road1", "a") == (("road2", "a"), ("road3", "a"))
+    assert network.connected_lanes("road1", "b") == (("road2", "b"), ("road3", "b"))
+    # ... road2-a is not connected to anything
+    assert network.connected_lanes("road2", "a") == ()
+    # ... blah-foo does not exist
+    assert network.connected_lanes("blah", "foo") == ()
