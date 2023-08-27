@@ -64,8 +64,8 @@ links between the vertices.
 
 The edges in this graph come in two forms - either a _lane_ that
 corresponds to the lanes modelled in our existing junction primitives,
-or a _join_ (white line in the figure) which is a connector between
-two lanes. A join always starts at a lane end vertex and ends at a
+or a _connector_ (white line in the figure) between two lanes. 
+A connector starts at a lane end vertex and ends at a
 lane start vertex.
 
 ## Representing the graph in Python
@@ -125,7 +125,8 @@ Finally, the `connect_lanes` method lets us join two lanes,
 identifying each one by the road label/lane label pair.
 Implicitly, we are always going to be connecting a lane end to
 a lane start, so this is sufficient information to define the
-connectivity.
+connectivity. Calling the `connect_lanes` function creates
+a _connector_ edge in our terminology from the digraph model.
 
 ```python
 >>> # Connect J1A end to J2A start
@@ -136,3 +137,19 @@ connectivity.
 (('road2', 'a'),)
 
 ```
+
+## Enforcing connector colocation
+
+For the network to make physical sense, connectors need to
+start and end at the same physical spot - i.e. the connected
+lanes should have their end and start vertices coinciding on
+the same physical location. This is dependent on having the
+origin, lane separation etc of the junctions matched
+appropriately so the lane vertices have the right physical
+location.
+
+This isn't something that has been enforced at any point in the
+current modelling, so two roads could be completely separate in
+space, and have a connection between them. Validating the locations
+of the connections would be a useful addition to this model, but
+isn't implemented yet.
