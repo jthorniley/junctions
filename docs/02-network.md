@@ -58,9 +58,9 @@ lines:
 
 ![](images/network-derived.png)
 
-This is a directed acyclic graph (DAG) or network. We'll use the
-term _vertex_/_vertices_ to refer to the points on this graph,
-and _edge(s)_ to refer to the links between the vertices.
+This is a directed graph / digraph. We'll use the term _vertex_/_vertices_
+to refer to the points on this graph, and _edge(s)_ to refer to the 
+links between the vertices.
 
 The edges in this graph come in two forms - either a _lane_ that
 corresponds to the lanes modelled in our existing junction primitives,
