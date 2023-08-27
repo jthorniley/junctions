@@ -67,3 +67,68 @@ corresponds to the lanes modelled in our existing junction primitives,
 or a _join_ (white line in the figure) which is a connector between
 two lanes. A join always starts at a lane end vertex and ends at a
 lane start vertex.
+
+## Representing the graph in Python
+
+The `Network` class is used to encapsulate junctions and
+connections between them.
+
+First, we can use it to capture some primitive junctions. Each
+junction gets a unique _label_ which is used to look it up
+later. We can assign the label ourselves or in this example
+let the `Network` class pick a unique label for us.
+
+```python
+>>> from junctions.network import Network
+>>> from junctions.types import Road
+
+>>> network = Network()
+
+>>> road1 = Road(origin=(10, 10), bearing=0, road_length=10, lane_separation=5)
+>>> road2 = Road(origin=(10, 20), bearing=0, road_length=10, lane_separation=5)
+
+>>> # The network assigns names to the junctions for us and
+>>> # returns them
+>>> j1 = network.add_junction(road1)
+>>> j1
+'road1'
+
+>>> j2 = network.add_junction(road2)
+>>> j2
+'road2'
+
+>>> network.list_junction_labels()
+['road1', 'road2']
+
+>>> # Can get junctions back from junction lookup
+>>> network.get_junction(j1) == road1
+True
+
+```
+
+Additionally use the network to keep track of all the lanes
+in the system. The lane labels will be determined by the junction
+type, e.g. for roads it will be `'a'` and `'b'` for the two lanes.
+
+```python
+>>> # Each road will have a list of lanes
+>>> network.get_lane_labels(j1)
+['a', 'b']
+
+>>> # And we can look up the lanes
+>>> network.get_lane(j1, 'a') == road1.lanes[0]
+True
+```
+
+Finally, the `connect_lanes` method lets us join two lanes,
+identifying each one by the road label/lane label pair.
+
+
+```python
+>>> # Connect J1A end to J2A start
+>>> network.connect_lanes(j1, 'a', j2, 'a')
+
+>>> network.get_connected_lanes(j1, 'a')
+(('road2', 'a'),)
+
+```
