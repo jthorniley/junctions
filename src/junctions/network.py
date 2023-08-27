@@ -1,7 +1,7 @@
 from types import MappingProxyType
 from typing import Mapping, Sequence
 
-from junctions.types import Junction
+from junctions.types import Junction, Lane
 
 
 class Network:
@@ -40,6 +40,11 @@ class Network:
     def lane_labels(self, junction_label: str) -> Sequence[str]:
         junction = self.junction(junction_label)
         return junction.LANE_LABELS
+
+    def lane(self, junction_label: str, lane_label: str) -> Lane:
+        """Retrieve a lane by junction and lane label"""
+        junction = self.junction(junction_label)
+        return junction.lanes[lane_label]
 
     def all_junctions(self) -> Sequence[Junction]:
         return tuple(self._junctions.values())

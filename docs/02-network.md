@@ -116,8 +116,9 @@ type, e.g. for roads it will be `'a'` and `'b'` for the two lanes.
 ('a', 'b')
 
 >>> # And we can look up the lanes
->>> network.lane(j1, 'a') == road1.lanes[0]
+>>> network.lane(j1, 'a') == road1.lanes['a']
 True
+
 ```
 
 Finally, the `connect_lanes` method lets us join two lanes,
