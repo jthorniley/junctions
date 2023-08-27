@@ -97,11 +97,11 @@ let the `Network` class pick a unique label for us.
 >>> j2
 'road2'
 
->>> network.list_junction_labels()
-['road1', 'road2']
+>>> network.junction_labels()
+('road1', 'road2')
 
 >>> # Can get junctions back from junction lookup
->>> network.get_junction(j1) == road1
+>>> network.junction(j1) == road1
 True
 
 ```
@@ -112,11 +112,11 @@ type, e.g. for roads it will be `'a'` and `'b'` for the two lanes.
 
 ```python
 >>> # Each road will have a list of lanes
->>> network.get_lane_labels(j1)
-['a', 'b']
+>>> network.lane_labels(j1)
+('a', 'b')
 
 >>> # And we can look up the lanes
->>> network.get_lane(j1, 'a') == road1.lanes[0]
+>>> network.lane(j1, 'a') == road1.lanes[0]
 True
 ```
 
@@ -130,7 +130,8 @@ connectivity.
 >>> # Connect J1A end to J2A start
 >>> network.connect_lanes(j1, 'a', j2, 'a')
 
->>> network.get_connected_lanes(j1, 'a')
+>>> # List all the connections made in the network
+>>> network.connected_lanes(j1, 'a')
 (('road2', 'a'),)
 
 ```
