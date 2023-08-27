@@ -1,7 +1,7 @@
 import math
 from dataclasses import dataclass
 from functools import cached_property
-from typing import TypeAlias
+from typing import ClassVar, Sequence, TypeAlias
 
 from pyglet.math import Vec2
 
@@ -29,13 +29,15 @@ class Road:
     ![](images/a-b.png)
     """
 
+    LANE_LABELS: ClassVar[Sequence[str]] = ("a", "b")
+
     origin: tuple[float, float]
     bearing: float
     road_length: float
     lane_separation: float
 
     @cached_property
-    def lanes(self) -> tuple[Lane, Lane]:
+    def lanes(self) -> dict[str, Lane]:
         """Road lanes, A then B"""
         a0 = Vec2(*self.origin)
         course = Vec2(0, self.road_length).rotate(-self.bearing)
@@ -44,7 +46,7 @@ class Road:
         b0 = a1 + separation
         b1 = a0 + separation
 
-        return (Lane(a0, a1), Lane(b0, b1))
+        return {"a": Lane(a0, a1), "b": Lane(b0, b1)}
 
 
 @dataclass(frozen=True)
@@ -69,6 +71,8 @@ class Arc:
     ![](images/arc.png)
     """
 
+    LANE_LABELS: ClassVar[Sequence[str]] = ("a", "b")
+
     origin: tuple[float, float]
     bearing: float
     arc_length: float
@@ -76,18 +80,18 @@ class Arc:
     lane_separation: float
 
     @cached_property
-    def lanes(self) -> tuple[Lane, Lane]:
+    def lanes(self) -> dict[str, Lane]:
         a0 = Vec2(*self.origin)
         origin_normal = Vec2(-1, 0).rotate(-self.bearing)
         end_normal = Vec2(-1, 0).rotate(-self.bearing - self.arc_length)
 
-        return (
-            Lane(a0, self.focus + end_normal * self.arc_radius),
-            Lane(
+        return {
+            "a": Lane(a0, self.focus + end_normal * self.arc_radius),
+            "b": Lane(
                 self.focus + end_normal * (self.arc_radius + self.lane_separation),
                 self.focus + origin_normal * (self.arc_radius + self.lane_separation),
             ),
-        )
+        }
 
     @cached_property
     def focus(self) -> Vec2:
@@ -109,6 +113,8 @@ class Tee:
 
     The parameters of the components are constrained by the above.
     """
+
+    LANE_LABELS: ClassVar[Sequence[str]] = ("a", "b", "c", "d", "e", "f")
 
     origin: tuple[float, float]
     main_road_bearing: float
@@ -137,12 +143,23 @@ class Tee:
     @cached_property
     def branch_b(self) -> Arc:
         return Arc(
-            origin=(*self.branch_a.lanes[1].start,),
+            origin=(*self.branch_a.lanes["b"].start,),
             bearing=self.main_road_bearing - math.pi / 2,
             arc_length=math.pi / 2,
             arc_radius=self.branch_a.arc_radius,
             lane_separation=self.lane_separation,
         )
+
+    @cached_property
+    def lanes(self) -> dict[str, Lane]:
+        return {
+            "a": self.main_road.lanes["a"],
+            "b": self.main_road.lanes["b"],
+            "c": self.branch_a.lanes["a"],
+            "d": self.branch_a.lanes["b"],
+            "e": self.branch_b.lanes["a"],
+            "f": self.branch_b.lanes["b"],
+        }
 
 
 Junction: TypeAlias = Road | Arc | Tee

@@ -2,10 +2,13 @@
 name = "junctions"
 version = "0.1.0"
 description = ""
-authors = ["James Thorniley <james.thorniley@gmail.com>"]
+authors = [{name = "James Thorniley", email="james.thorniley@gmail.com"}]
 readme = "README.md"
 requires-python = ">=3.11"
 license = {file = "LICENSE"}
+
+[tool.pytest.ini_options]
+addopts = "--doctest-glob docs/*.md"
 
 [tool.poetry]
 name = "junctions"
@@ -24,6 +27,7 @@ black = "^23.7.0"
 ruff = "^0.0.282"
 factory-boy = "^3.3.0"
 imageio = "^2.31.1"
+pyright = "^1.1.324"
 
 [tool.poetry.scripts]
 viewer = "viewer:run"

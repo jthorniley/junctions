@@ -26,6 +26,9 @@ jobs:
         run: |
           # default set of ruff rules with GitHub Annotations
           poetry run ruff --format=github --target-version=py311 .
+      - name: Lint with pyright
+        run: |
+          poetry run pyright .
       - name: Test with pytest
         run: |
           env SKIP_RENDERING_TESTS=1 poetry run pytest
