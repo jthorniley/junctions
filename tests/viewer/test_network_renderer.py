@@ -78,7 +78,7 @@ def test_render_road_arc(reference_render: ReferenceRender, _fuzz):
     network.add_junction(ArcFactory.build())
 
     # WHEN I render the network
-    NetworkRenderer(network.junction_lookup).draw()
+    NetworkRenderer(network).draw()
 
     # THEN the network is as expected
     reference_render.assert_screenshots_match()

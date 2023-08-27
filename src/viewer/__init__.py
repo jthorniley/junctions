@@ -32,7 +32,7 @@ def run():
     network.add_junction(road1)
     network.add_junction(road2)
 
-    network_renderer = NetworkRenderer(network.junction_lookup)
+    network_renderer = NetworkRenderer(network)
 
     # Double the scale
     win.view = Mat4.from_scale(Vec3(2, 2, 1))

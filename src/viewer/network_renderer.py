@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Mapping, Sequence
 
 import pyglet
+from junctions.network import Network
 from junctions.types import Arc, Junction, Lane, Road, Tee
 from pyglet.math import Vec2
 
@@ -107,11 +108,13 @@ def _tee_shapes(
 
 
 class NetworkRenderer:
-    def __init__(self, junctions: Mapping[str, Junction]):
+    def __init__(self, network: Network):
         self._junctions: dict[str, Sequence[pyglet.shapes.ShapeBase]] = {}
+
         self._batch: pyglet.graphics.Batch = pyglet.graphics.Batch()
-        for label, junction in junctions.items():
-            self._add_junction(label, junction)
+        for junction_label in network.junction_labels():
+            junction = network.junction(junction_label)
+            self._add_junction(junction_label, junction)
 
     def draw(self):
         self._batch.draw()

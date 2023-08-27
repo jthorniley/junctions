@@ -4,18 +4,6 @@ from junctions.network import Network
 from tests.junctions.factories import ArcFactory, RoadFactory
 
 
-def test_add_road_to_network():
-    # WHEN I have a network
-    network = Network()
-
-    # AND I add a road to the network
-    road = RoadFactory.build()
-    network.add_junction(road)
-
-    # THEN the road is in the network junction list
-    assert list(network.all_junctions()) == [road]
-
-
 def test_add_road_default_label():
     # WHEN I have a network
     network = Network()
@@ -26,7 +14,8 @@ def test_add_road_default_label():
 
     # THEN the road is labelled road1
     assert label == "road1"
-    assert network.junction_lookup == {"road1": road}
+    assert network.junction_labels() == ("road1",)
+    assert network.junction("road1") == road
 
 
 def test_add_arc_default_label():
@@ -39,7 +28,8 @@ def test_add_arc_default_label():
 
     # THEN the arc is labelled arc1
     assert label == "arc1"
-    assert network.junction_lookup == {"arc1": arc}
+    assert network.junction_labels() == ("arc1",)
+    assert network.junction("arc1") == arc
 
 
 def test_add_arcs_and_roads_default_labels():
@@ -57,13 +47,13 @@ def test_add_arcs_and_roads_default_labels():
     network.add_junction(roads[2])
 
     # Then the arcs and roads get incrementing default labels
-    assert network.junction_lookup == {
-        "arc1": arcs[0],
-        "arc2": arcs[1],
-        "road1": roads[0],
-        "road2": roads[1],
-        "road3": roads[2],
-    }
+    assert network.junction_labels() == ("arc1", "road1", "arc2", "road2", "road3")
+
+    assert network.junction("arc1") == arcs[0]
+    assert network.junction("arc2") == arcs[1]
+    assert network.junction("road1") == roads[0]
+    assert network.junction("road2") == roads[1]
+    assert network.junction("road3") == roads[2]
 
 
 def test_add_arcs_and_roads_custom_labels():
@@ -83,13 +73,19 @@ def test_add_arcs_and_roads_custom_labels():
     # THEN the custom labels are used where appropriate
     assert first_road_label == "first_road"
     assert second_arc_label == "second_arc"
-    assert network.junction_lookup == {
-        "arc1": arcs[0],
-        "second_arc": arcs[1],
-        "first_road": roads[0],
-        "road1": roads[1],
-        "road2": roads[2],
-    }
+    assert network.junction_labels() == (
+        "arc1",
+        "first_road",
+        "second_arc",
+        "road1",
+        "road2",
+    )
+
+    assert network.junction("arc1") == arcs[0]
+    assert network.junction("second_arc") == arcs[1]
+    assert network.junction("first_road") == roads[0]
+    assert network.junction("road1") == roads[1]
+    assert network.junction("road2") == roads[2]
 
 
 def test_cannot_add_same_label_twice():
@@ -106,23 +102,7 @@ def test_cannot_add_same_label_twice():
         network.add_junction(arc2, label="foo")
 
     # AND only the first junction is added to the network
-    assert network.junction_lookup == {"foo": arc1}
-
-
-def test_junction_lookup_is_immutable():
-    # GIVEN a network with a junction
-    network = Network()
-    arc1 = ArcFactory.build()
-    network.add_junction(arc1, label="foo")
-    assert network.junction_lookup == {"foo": arc1}
-
-    # WHEN I try to modify the lookup directly
-    # THEN it is an error
-    with pytest.raises(TypeError):
-        network.junction_lookup["foo"] = "bar"  # type: ignore
-
-    # AND the network is unchanged
-    assert network.junction_lookup == {"foo": arc1}
+    assert network.junction_labels() == ("foo",)
 
 
 def test_get_lane_labels_road():

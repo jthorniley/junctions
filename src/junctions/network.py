@@ -1,5 +1,4 @@
-from types import MappingProxyType
-from typing import Mapping, Sequence
+from typing import Sequence
 
 from junctions.types import Junction, Lane
 
@@ -62,11 +61,3 @@ class Network:
         self, junction_label: str, lane_label: str
     ) -> Sequence[tuple[str, str]]:
         return tuple(self._connected_lanes.get((junction_label, lane_label), []))
-
-    def all_junctions(self) -> Sequence[Junction]:
-        return tuple(self._junctions.values())
-
-    @property
-    def junction_lookup(self) -> Mapping[str, Junction]:
-        # immutable view
-        return MappingProxyType(self._junctions)
