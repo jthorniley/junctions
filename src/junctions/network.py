@@ -31,6 +31,12 @@ class Network:
             self._junctions[label] = junction
             return label
 
+    def junction_labels(self) -> Sequence[str]:
+        return tuple(self._junctions.keys())
+
+    def junction(self, label: str) -> Junction:
+        return self._junctions[label]
+
     def all_junctions(self) -> Sequence[Junction]:
         return tuple(self._junctions.values())
 
