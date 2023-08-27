@@ -39,7 +39,7 @@ For example in this illustration:
 
 To construct a network, we need to connect the lanes together in an
 orientation that vehicles can traveerse, in other words, each 
-connection will be between one lanes end node and the start node of
+connection will be between one lane's end node and the start node of
 another lane (in a different junction).
 
 For example, given a network of three junctions (J1 is a road and
