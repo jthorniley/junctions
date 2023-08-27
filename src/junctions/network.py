@@ -7,6 +7,7 @@ from junctions.types import Junction, Lane
 class Network:
     def __init__(self):
         self._junctions: dict[str, Junction] = {}
+        self._connected_lanes: dict[tuple[str, str], list[tuple[str, str]]] = {}
 
     def add_junction(self, junction: Junction, label: str | None = None) -> str:
         if label is None:
@@ -45,6 +46,22 @@ class Network:
         """Retrieve a lane by junction and lane label"""
         junction = self.junction(junction_label)
         return junction.lanes[lane_label]
+
+    def connect_lanes(
+        self,
+        junction_label_1: str,
+        lane_label_1: str,
+        junction_label_2: str,
+        lane_label_2: str,
+    ) -> None:
+        self._connected_lanes.setdefault((junction_label_1, lane_label_1), []).append(
+            (junction_label_2, lane_label_2)
+        )
+
+    def connected_lanes(
+        self, junction_label: str, lane_label: str
+    ) -> Sequence[tuple[str, str]]:
+        return tuple(self._connected_lanes.get((junction_label, lane_label), []))
 
     def all_junctions(self) -> Sequence[Junction]:
         return tuple(self._junctions.values())
