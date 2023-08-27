@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Mapping, Sequence
+from typing import Sequence
 
 import pyglet
 from junctions.network import Network
