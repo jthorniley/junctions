@@ -34,8 +34,12 @@ class Network:
     def junction_labels(self) -> Sequence[str]:
         return tuple(self._junctions.keys())
 
-    def junction(self, label: str) -> Junction:
-        return self._junctions[label]
+    def junction(self, junction_label: str) -> Junction:
+        return self._junctions[junction_label]
+
+    def lane_labels(self, junction_label: str) -> Sequence[str]:
+        junction = self.junction(junction_label)
+        return junction.LANE_LABELS
 
     def all_junctions(self) -> Sequence[Junction]:
         return tuple(self._junctions.values())

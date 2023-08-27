@@ -123,3 +123,16 @@ def test_junction_lookup_is_immutable():
 
     # AND the network is unchanged
     assert network.junction_lookup == {"foo": arc1}
+
+
+def test_get_lane_labels_road():
+    # GIVEN a network with a road
+    network = Network()
+    road1 = RoadFactory.build()
+    network.add_junction(road1, "road1")
+
+    # WHEN I request all labels
+    labels = network.lane_labels("road1")
+
+    # THEN the result is the lane labels for the road
+    assert labels == ("a", "b")

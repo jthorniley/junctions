@@ -37,7 +37,7 @@ class Road:
     lane_separation: float
 
     @cached_property
-    def lanes(self) -> tuple[Lane, Lane]:
+    def lanes(self) -> dict[str, Lane]:
         """Road lanes, A then B"""
         a0 = Vec2(*self.origin)
         course = Vec2(0, self.road_length).rotate(-self.bearing)
@@ -46,7 +46,7 @@ class Road:
         b0 = a1 + separation
         b1 = a0 + separation
 
-        return (Lane(a0, a1), Lane(b0, b1))
+        return {"a": Lane(a0, a1), "b": Lane(b0, b1)}
 
 
 @dataclass(frozen=True)
@@ -80,18 +80,18 @@ class Arc:
     lane_separation: float
 
     @cached_property
-    def lanes(self) -> tuple[Lane, Lane]:
+    def lanes(self) -> dict[str, Lane]:
         a0 = Vec2(*self.origin)
         origin_normal = Vec2(-1, 0).rotate(-self.bearing)
         end_normal = Vec2(-1, 0).rotate(-self.bearing - self.arc_length)
 
-        return (
-            Lane(a0, self.focus + end_normal * self.arc_radius),
-            Lane(
+        return {
+            "a": Lane(a0, self.focus + end_normal * self.arc_radius),
+            "b": Lane(
                 self.focus + end_normal * (self.arc_radius + self.lane_separation),
                 self.focus + origin_normal * (self.arc_radius + self.lane_separation),
             ),
-        )
+        }
 
     @cached_property
     def focus(self) -> Vec2:
@@ -143,7 +143,7 @@ class Tee:
     @cached_property
     def branch_b(self) -> Arc:
         return Arc(
-            origin=(*self.branch_a.lanes[1].start,),
+            origin=(*self.branch_a.lanes["b"].start,),
             bearing=self.main_road_bearing - math.pi / 2,
             arc_length=math.pi / 2,
             arc_radius=self.branch_a.arc_radius,
@@ -151,8 +151,15 @@ class Tee:
         )
 
     @cached_property
-    def lanes(self) -> tuple[Lane, Lane, Lane, Lane, Lane, Lane]:
-        return (*self.main_road.lanes, *self.branch_a.lanes, *self.branch_b.lanes)
+    def lanes(self) -> dict[str, Lane]:
+        return {
+            "a": self.main_road.lanes["a"],
+            "b": self.main_road.lanes["b"],
+            "c": self.branch_a.lanes["a"],
+            "d": self.branch_a.lanes["b"],
+            "e": self.branch_b.lanes["a"],
+            "f": self.branch_b.lanes["b"],
+        }
 
 
 Junction: TypeAlias = Road | Arc | Tee

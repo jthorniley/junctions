@@ -32,18 +32,18 @@ def _road_shapes(
 ) -> Sequence[pyglet.shapes.ShapeBase]:
     lanes = road.lanes
     lane_a = pyglet.shapes.Line(
-        lanes[0].start.x,
-        lanes[0].start.y,
-        lanes[0].end.x,
-        lanes[0].end.y,
+        lanes["a"].start.x,
+        lanes["a"].start.y,
+        lanes["a"].end.x,
+        lanes["a"].end.y,
         color=(103, 240, 90, 255),
         batch=batch,
     )
     lane_b = pyglet.shapes.Line(
-        lanes[1].start.x,
-        lanes[1].start.y,
-        lanes[1].end.x,
-        lanes[1].end.y,
+        lanes["b"].start.x,
+        lanes["b"].start.y,
+        lanes["b"].end.x,
+        lanes["b"].end.y,
         color=(103, 240, 90, 255),
         batch=batch,
     )
@@ -51,8 +51,8 @@ def _road_shapes(
     return (
         lane_a,
         lane_b,
-        *_node_markers(lanes[0], batch),
-        *_node_markers(lanes[1], batch),
+        *_node_markers(lanes["a"], batch),
+        *_node_markers(lanes["b"], batch),
     )
 
 
@@ -60,8 +60,8 @@ def _arc_shapes(
     arc: Arc, batch: pyglet.graphics.Batch
 ) -> Sequence[pyglet.shapes.ShapeBase]:
     lanes = arc.lanes
-    a0 = lanes[0].start
-    b1 = lanes[1].end
+    a0 = lanes["a"].start
+    b1 = lanes["b"].end
     focus = arc.focus
 
     def make_line(start_point, r):
@@ -91,8 +91,8 @@ def _arc_shapes(
     return (
         *lane_a,
         *lane_b,
-        *_node_markers(lanes[0], batch),
-        *_node_markers(lanes[1], batch),
+        *_node_markers(lanes["a"], batch),
+        *_node_markers(lanes["b"], batch),
     )
 
 

@@ -22,7 +22,7 @@ def run():
     )
     road1 = Road((140, 100), bearing=math.pi / 2, road_length=80, lane_separation=6)
     road2 = Road(
-        (*tee.branch_a.lanes[0].end,),
+        (*tee.branch_a.lanes["a"].end,),
         bearing=math.pi,
         road_length=50,
         lane_separation=6,
