@@ -1,7 +1,7 @@
 import math
 from dataclasses import dataclass
 from functools import cached_property
-from typing import TypeAlias
+from typing import ClassVar, Sequence, TypeAlias
 
 from pyglet.math import Vec2
 
@@ -28,6 +28,8 @@ class Road:
 
     ![](images/a-b.png)
     """
+
+    LANE_LABELS: ClassVar[Sequence[str]] = ("a", "b")
 
     origin: tuple[float, float]
     bearing: float
@@ -68,6 +70,8 @@ class Arc:
 
     ![](images/arc.png)
     """
+
+    LANE_LABELS: ClassVar[Sequence[str]] = ("a", "b")
 
     origin: tuple[float, float]
     bearing: float
@@ -110,6 +114,8 @@ class Tee:
     The parameters of the components are constrained by the above.
     """
 
+    LANE_LABELS: ClassVar[Sequence[str]] = ("a", "b", "c", "d", "e", "f")
+
     origin: tuple[float, float]
     main_road_bearing: float
     main_road_length: float
@@ -143,6 +149,10 @@ class Tee:
             arc_radius=self.branch_a.arc_radius,
             lane_separation=self.lane_separation,
         )
+
+    @cached_property
+    def lanes(self) -> tuple[Lane, Lane, Lane, Lane, Lane, Lane]:
+        return (*self.main_road.lanes, *self.branch_a.lanes, *self.branch_b.lanes)
 
 
 Junction: TypeAlias = Road | Arc | Tee
