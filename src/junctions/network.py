@@ -8,7 +8,7 @@ class Network:
     def __init__(self):
         self._junctions: dict[str, Junction] = {}
 
-    def add_junction(self, junction: Junction, label: str | None = None) -> None:
+    def add_junction(self, junction: Junction, label: str | None = None) -> str:
         if label is None:
             cls_name = junction.__class__.__name__.lower()
 
@@ -21,12 +21,15 @@ class Network:
                     except ValueError:
                         pass
 
-            self._junctions[f"{cls_name}{i}"] = junction
+            label = f"{cls_name}{i}"
+            self._junctions[label] = junction
+            return label
 
         else:
             if label in self._junctions:
                 raise ValueError(f"junction with label {label} already exists")
             self._junctions[label] = junction
+            return label
 
     def all_junctions(self) -> Sequence[Junction]:
         return tuple(self._junctions.values())

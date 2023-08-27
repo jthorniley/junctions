@@ -22,9 +22,10 @@ def test_add_road_default_label():
 
     # AND I add a road to the network
     road = RoadFactory.build()
-    network.add_junction(road)
+    label = network.add_junction(road)
 
     # THEN the road is labelled road1
+    assert label == "road1"
     assert network.junction_lookup == {"road1": road}
 
 
@@ -34,9 +35,10 @@ def test_add_arc_default_label():
 
     # AND I add a arc to the network
     arc = ArcFactory.build()
-    network.add_junction(arc)
+    label = network.add_junction(arc)
 
     # THEN the arc is labelled arc1
+    assert label == "arc1"
     assert network.junction_lookup == {"arc1": arc}
 
 
@@ -73,12 +75,14 @@ def test_add_arcs_and_roads_custom_labels():
     roads = RoadFactory.build_batch(3)
 
     network.add_junction(arcs[0])
-    network.add_junction(roads[0], "first_road")
-    network.add_junction(arcs[1], "second_arc")
+    first_road_label = network.add_junction(roads[0], "first_road")
+    second_arc_label = network.add_junction(arcs[1], "second_arc")
     network.add_junction(roads[1])
     network.add_junction(roads[2])
 
     # THEN the custom labels are used where appropriate
+    assert first_road_label == "first_road"
+    assert second_arc_label == "second_arc"
     assert network.junction_lookup == {
         "arc1": arcs[0],
         "second_arc": arcs[1],
