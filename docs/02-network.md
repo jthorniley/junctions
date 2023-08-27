@@ -1,7 +1,7 @@
 # Joining junctions into a network
 
 Having some simple junction primitives (straight roads and arcs)
-and event a composite junction (a T-junction) - we need a way to
+and even a composite junction (a T-junction) - we need a way to
 combine these into a road network that connects points together.
 
 Simply by placing junctions "next to" each other in physical space
