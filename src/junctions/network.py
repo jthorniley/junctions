@@ -4,11 +4,13 @@ from junctions.types import Junction, Lane
 
 
 class Network:
-    def __init__(self):
+    def __init__(self, default_speed_limit: float = 9.0):
+        self._default_speed_limit = default_speed_limit
         self._junctions: dict[str, Junction] = {}
         self._connected_lanes: dict[tuple[str, str], list[tuple[str, str]]] = {}
+        self._lane_speed_limits: dict[tuple[str, str], float] = {}
 
-    def add_junction(self, junction: Junction, label: str | None = None) -> str:
+    def _make_junction_label(self, junction: Junction, label: str | None = None) -> str:
         if label is None:
             cls_name = junction.__class__.__name__.lower()
 
@@ -21,15 +23,28 @@ class Network:
                     except ValueError:
                         pass
 
-            label = f"{cls_name}{i}"
-            self._junctions[label] = junction
-            return label
+            return f"{cls_name}{i}"
 
         else:
             if label in self._junctions:
                 raise ValueError(f"junction with label {label} already exists")
-            self._junctions[label] = junction
             return label
+
+    def add_junction(
+        self,
+        junction: Junction,
+        label: str | None = None,
+        speed_limit: float | None = None,
+    ) -> str:
+        label = self._make_junction_label(junction, label)
+        self._junctions[label] = junction
+
+        for lane_label in junction.LANE_LABELS:
+            self._lane_speed_limits[(label, lane_label)] = (
+                self._default_speed_limit if speed_limit is None else speed_limit
+            )
+
+        return label
 
     def junction_labels(self) -> Sequence[str]:
         return tuple(self._junctions.keys())
@@ -61,3 +76,6 @@ class Network:
         self, junction_label: str, lane_label: str
     ) -> Sequence[tuple[str, str]]:
         return tuple(self._connected_lanes.get((junction_label, lane_label), []))
+
+    def speed_limit(self, junction_label: str, lane_label: str) -> float:
+        return self._lane_speed_limits[(junction_label, lane_label)]

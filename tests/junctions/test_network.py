@@ -145,3 +145,46 @@ def test_connectivity():
     assert network.connected_lanes("road2", "a") == ()
     # ... blah-foo does not exist
     assert network.connected_lanes("blah", "foo") == ()
+
+
+def test_provide_speed_limits():
+    # GIVEN a network with no speed limit supplied
+    network = Network()
+
+    # WHEN I add a road
+    network.add_junction(RoadFactory.build())
+
+    # THEN the default speed limit is 9m/s
+    assert network.speed_limit("road1", "a") == pytest.approx(9)
+    assert network.speed_limit("road1", "b") == pytest.approx(9)
+
+
+def test_default_speed_limit():
+    # GIVEN a network with a custom default speed limit
+    network = Network(default_speed_limit=12.1)
+
+    # WHEN I add some roads
+    network.add_junction(RoadFactory.build())
+    network.add_junction(RoadFactory.build())
+
+    # THEN all the speed limits are set to the default
+    assert network.speed_limit("road1", "a") == pytest.approx(12.1)
+    assert network.speed_limit("road1", "b") == pytest.approx(12.1)
+    assert network.speed_limit("road2", "a") == pytest.approx(12.1)
+    assert network.speed_limit("road2", "b") == pytest.approx(12.1)
+
+
+def test_custom_speed_limit_for_junction():
+    # GIVEN a network with a default speed limit
+    network = Network(default_speed_limit=15)
+
+    # WHEN I add one road with the default speed limit and
+    # one road with a custom speed limit
+    network.add_junction(RoadFactory.build())
+    network.add_junction(RoadFactory.build(), speed_limit=5)
+
+    # THEN the lane speec limits are set as appropriate
+    assert network.speed_limit("road1", "a") == pytest.approx(15)
+    assert network.speed_limit("road1", "b") == pytest.approx(15)
+    assert network.speed_limit("road2", "a") == pytest.approx(5)
+    assert network.speed_limit("road2", "b") == pytest.approx(5)
