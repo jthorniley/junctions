@@ -53,18 +53,16 @@ class VehiclesState:
                 raise ValueError(f"vehicle with label {label} already exists")
             return label
 
-    def vehicle_labels(self) -> Sequence[str]:
-        return tuple(self._vehicles.keys())
+    def vehicle_labels(self) -> Iterable[str]:
+        return self._vehicles.keys()
 
     def vehicle(self, label: str) -> Vehicle:
         return self._vehicles[label]
 
-    def add_vehicle(
-        self, vehicle: Vehicle, label: str | None = None
-    ) -> tuple[VehiclesState, str]:
+    def add_vehicle(self, vehicle: Vehicle, label: str | None = None) -> VehiclesState:
         label = self._make_vehicle_label(label)
         new_state = self.with_updates({label: vehicle})
-        return new_state, label
+        return new_state
 
     def with_updates(self, updates: dict[str, Vehicle]) -> VehiclesState:
         new_state = VehiclesState()
