@@ -61,3 +61,6 @@ class Network:
         self, junction_label: str, lane_label: str
     ) -> Sequence[tuple[str, str]]:
         return tuple(self._connected_lanes.get((junction_label, lane_label), []))
+
+    def speed_limit(self, junction_label: str, lane_label: str) -> float:
+        return 9

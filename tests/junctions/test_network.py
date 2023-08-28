@@ -145,3 +145,15 @@ def test_connectivity():
     assert network.connected_lanes("road2", "a") == ()
     # ... blah-foo does not exist
     assert network.connected_lanes("blah", "foo") == ()
+
+
+def test_provide_speed_limits():
+    # GIVEN a network with no speed limit supplied
+    network = Network()
+
+    # WHEN I add a road
+    network.add_junction(RoadFactory.build())
+
+    # THEN the default speed limit is 9m/s
+    assert network.speed_limit("road1", "a") == pytest.approx(9)
+    assert network.speed_limit("road1", "b") == pytest.approx(9)
