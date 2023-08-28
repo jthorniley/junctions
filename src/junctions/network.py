@@ -30,11 +30,20 @@ class Network:
                 raise ValueError(f"junction with label {label} already exists")
             return label
 
-    def add_junction(self, junction: Junction, label: str | None = None) -> str:
+    def add_junction(
+        self,
+        junction: Junction,
+        label: str | None = None,
+        speed_limit: float | None = None,
+    ) -> str:
         label = self._make_junction_label(junction, label)
         self._junctions[label] = junction
+
         for lane_label in junction.LANE_LABELS:
-            self._lane_speed_limits[(label, lane_label)] = self._default_speed_limit
+            self._lane_speed_limits[(label, lane_label)] = (
+                self._default_speed_limit if speed_limit is None else speed_limit
+            )
+
         return label
 
     def junction_labels(self) -> Sequence[str]:
