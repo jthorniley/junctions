@@ -1,6 +1,6 @@
 import math
 from dataclasses import dataclass
-from functools import cached_property, partial
+from functools import cached_property
 from typing import Callable, ClassVar, Sequence, TypeAlias
 
 from pyglet.math import Vec2
