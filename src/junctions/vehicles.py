@@ -68,6 +68,10 @@ class Vehicles:
         """
         self._vehicles[vehicle_label] = ActiveVehicle(junction_label, lane_label, 0)
 
+    def deactivate(self, vehicle_label: str):
+        """Deactivate the vehicle (remove it from the simulation)"""
+        self._vehicles[vehicle_label] = InactiveVehicle()
+
     def vehicle_labels(self) -> Sequence[str]:
         return tuple(self._vehicles.keys())
 
