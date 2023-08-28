@@ -10,6 +10,7 @@ from pyglet.math import Vec2
 class Lane:
     start: Vec2
     end: Vec2
+    length: float
 
 
 @dataclass(frozen=True)
@@ -46,7 +47,10 @@ class Road:
         b0 = a1 + separation
         b1 = a0 + separation
 
-        return {"a": Lane(a0, a1), "b": Lane(b0, b1)}
+        return {
+            "a": Lane(a0, a1, self.road_length),
+            "b": Lane(b0, b1, self.road_length),
+        }
 
 
 @dataclass(frozen=True)
@@ -86,10 +90,15 @@ class Arc:
         end_normal = Vec2(-1, 0).rotate(-self.bearing - self.arc_length)
 
         return {
-            "a": Lane(a0, self.focus + end_normal * self.arc_radius),
+            "a": Lane(
+                a0,
+                self.focus + end_normal * self.arc_radius,
+                self.arc_length * self.arc_radius,
+            ),
             "b": Lane(
                 self.focus + end_normal * (self.arc_radius + self.lane_separation),
                 self.focus + origin_normal * (self.arc_radius + self.lane_separation),
+                self.arc_length * (self.arc_radius + self.lane_separation),
             ),
         }
 
