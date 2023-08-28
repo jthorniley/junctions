@@ -106,24 +106,31 @@ class Arc:
         origin_normal = Vec2(-1, 0).rotate(-self.bearing)
         end_normal = Vec2(-1, 0).rotate(-self.bearing - self.arc_length)
 
-        def interp(r: float, position: float) -> PointWithBearing:
-            theta = position / r
+        def interp_a(position: float) -> PointWithBearing:
+            theta = position / self.arc_radius
             new_bearing = (self.bearing + theta) % (math.pi * 2)
             normal = Vec2(-1, 0).rotate(-new_bearing)
-            return PointWithBearing(self.focus + normal * r, new_bearing)
+            return PointWithBearing(self.focus + normal * self.arc_radius, new_bearing)
+
+        def interp_b(position: float) -> PointWithBearing:
+            radius = self.arc_radius + self.lane_separation
+            theta = self.arc_length - position / radius
+            new_bearing = (self.bearing + theta) % (math.pi * 2)
+            normal = Vec2(-1, 0).rotate(-new_bearing)
+            return PointWithBearing(self.focus + normal * radius, new_bearing)
 
         return {
             "a": Lane(
                 a0,
                 self.focus + end_normal * self.arc_radius,
                 self.arc_length * self.arc_radius,
-                partial(interp, self.arc_radius),
+                interp_a,
             ),
             "b": Lane(
                 self.focus + end_normal * (self.arc_radius + self.lane_separation),
                 self.focus + origin_normal * (self.arc_radius + self.lane_separation),
                 self.arc_length * (self.arc_radius + self.lane_separation),
-                partial(interp, self.arc_radius + self.lane_separation),
+                interp_b,
             ),
         }
 

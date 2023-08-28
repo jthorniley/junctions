@@ -45,7 +45,7 @@ class VehiclesStateRenderer:
 
     def _add_vehicle(self, label: str, vehicle: Vehicle):
         if not is_active_vehicle(vehicle):
-            del self._vehicles[label]
+            self._vehicles[label] = ()
             return
 
         self._vehicles[label] = _vehicle_shapes(vehicle, self._network, self._batch)
