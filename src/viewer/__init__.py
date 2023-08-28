@@ -1,11 +1,13 @@
 import math
 
 from junctions.network import Network
+from junctions.state.vehicles import ActiveVehicle, VehiclesState
 from junctions.types import Road, Tee
 from pyglet import app, window
 from pyglet.math import Mat4, Vec3
 
 from viewer.network_renderer import NetworkRenderer
+from viewer.vehicles_state_renderer import VehiclesStateRenderer
 
 
 def run():
@@ -33,6 +35,10 @@ def run():
     network.add_junction(road2)
 
     network_renderer = NetworkRenderer(network)
+    vehicles_state = VehiclesState().add_vehicle(
+        ActiveVehicle(junction_label="road1", lane_label="a", position=10.0)
+    )
+    vehicles_state_renderer = VehiclesStateRenderer(network, vehicles_state)
 
     # Double the scale
     win.view = Mat4.from_scale(Vec3(2, 2, 1))
@@ -41,5 +47,6 @@ def run():
     def on_draw():
         win.clear()
         network_renderer.draw()
+        vehicles_state_renderer.draw()
 
     app.run()

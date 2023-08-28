@@ -3,15 +3,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Sequence
 
 import pyglet
+from junctions.state.vehicles import (
+    ActiveVehicle,
+    Vehicle,
+    VehiclesState,
+    is_active_vehicle,
+)
 
 if TYPE_CHECKING:
     from junctions.network import Network
-    from junctions.state.vehicles import (
-        ActiveVehicle,
-        Vehicle,
-        VehiclesState,
-        is_active_vehicle,
-    )
 
 
 def _vehicle_shapes(
@@ -21,7 +21,12 @@ def _vehicle_shapes(
     pos = lane.interpolate(vehicle.position)
     return [
         pyglet.shapes.Circle(
-            pos.point.x, pos.point.y, radius=3, segments=10, color=(200, 0, 0, 255)
+            pos.point.x,
+            pos.point.y,
+            radius=2.5,
+            segments=10,
+            color=(200, 0, 0, 255),
+            batch=batch,
         )
     ]
 
