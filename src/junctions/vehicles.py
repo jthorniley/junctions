@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal, Sequence, TypeAlias, TypeGuard
+from typing import Iterable, Literal, Sequence, TypeAlias, TypeGuard
 
 
 @dataclass
@@ -73,3 +73,7 @@ class Vehicles:
 
     def vehicle(self, label: str) -> Vehicle:
         return self._vehicles[label]
+
+    def items(self) -> Iterable[tuple[str, Vehicle]]:
+        """dict-like iterator over all vehicles"""
+        return self._vehicles.items()
