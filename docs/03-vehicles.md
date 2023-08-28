@@ -49,8 +49,8 @@ Algorithm: _TransitionToNewLane_
 2. Invert the time step to find the amount of time the vehicle was
    past the end of its lane:
    $$t_{excess} = \frac{l_i(t)-L}{s_i}$$
-3. Choose a new lane $l'_i$ from the set of lanes connected to $l_i$
-   in the network.
+3. Choose a new lane $l'_i$ at random from the set of lanes connected
+   to $l_i$ in the network.
    1. If there are no lanes connected, remove the vehicle from 
       the simulation.
 5. Calculate the lane position on the new lane using the speed limit
