@@ -9,6 +9,7 @@ from junctions.state.vehicles import (
     VehiclesState,
     is_active_vehicle,
 )
+from pyglet.math import Vec2
 
 if TYPE_CHECKING:
     from junctions.network import Network
@@ -19,13 +20,21 @@ def _vehicle_shapes(
 ) -> Sequence[pyglet.shapes.ShapeBase]:
     lane = network.lane(vehicle.junction_label, vehicle.lane_label)
     pos = lane.interpolate(vehicle.position)
+
+    a = pos.point
+    forward = Vec2(0, 1).rotate(-pos.bearing)
+    right = Vec2(-1, 0).rotate(-pos.bearing)
+    b = pos.point - forward * 4
+    c = b + right * 3
+    d = c + forward * 4
     return [
-        pyglet.shapes.Circle(
-            pos.point.x,
-            pos.point.y,
-            radius=2.5,
-            segments=10,
-            color=(200, 0, 0, 255),
+        pyglet.shapes.Polygon(
+            (a[0], a[1]),
+            (b[0], b[1]),
+            (c[0], c[1]),
+            (d[0], d[1]),
+            (a[0], a[1]),
+            color=(200, 200, 200, 255),
             batch=batch,
         )
     ]
