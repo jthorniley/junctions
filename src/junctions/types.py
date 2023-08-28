@@ -1,9 +1,15 @@
 import math
 from dataclasses import dataclass
-from functools import cached_property
-from typing import ClassVar, Sequence, TypeAlias
+from functools import cached_property, partial
+from typing import Callable, ClassVar, Sequence, TypeAlias
 
 from pyglet.math import Vec2
+
+
+@dataclass(frozen=True)
+class PointWithBearing:
+    point: Vec2
+    bearing: float
 
 
 @dataclass(frozen=True)
@@ -11,6 +17,7 @@ class Lane:
     start: Vec2
     end: Vec2
     length: float
+    interpolate: Callable[[float], PointWithBearing]
 
 
 @dataclass(frozen=True)
@@ -47,9 +54,19 @@ class Road:
         b0 = a1 + separation
         b1 = a0 + separation
 
+        forwards = Vec2(0, 1).rotate(-self.bearing)
+
+        def interp_a(position: float) -> PointWithBearing:
+            return PointWithBearing(a0 + forwards * position, self.bearing)
+
+        def interp_b(position: float) -> PointWithBearing:
+            return PointWithBearing(
+                b0 - forwards * position, (self.bearing + math.pi) % (math.pi * 2)
+            )
+
         return {
-            "a": Lane(a0, a1, self.road_length),
-            "b": Lane(b0, b1, self.road_length),
+            "a": Lane(a0, a1, self.road_length, interp_a),
+            "b": Lane(b0, b1, self.road_length, interp_b),
         }
 
 
@@ -89,16 +106,24 @@ class Arc:
         origin_normal = Vec2(-1, 0).rotate(-self.bearing)
         end_normal = Vec2(-1, 0).rotate(-self.bearing - self.arc_length)
 
+        def interp(r: float, position: float) -> PointWithBearing:
+            theta = position / r
+            new_bearing = (self.bearing + theta) % (math.pi * 2)
+            normal = Vec2(-1, 0).rotate(-new_bearing)
+            return PointWithBearing(self.focus + normal * r, new_bearing)
+
         return {
             "a": Lane(
                 a0,
                 self.focus + end_normal * self.arc_radius,
                 self.arc_length * self.arc_radius,
+                partial(interp, self.arc_radius),
             ),
             "b": Lane(
                 self.focus + end_normal * (self.arc_radius + self.lane_separation),
                 self.focus + origin_normal * (self.arc_radius + self.lane_separation),
                 self.arc_length * (self.arc_radius + self.lane_separation),
+                partial(interp, self.arc_radius + self.lane_separation),
             ),
         }
 
