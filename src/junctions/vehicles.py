@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Literal, Sequence, TypeAlias
+from typing import Literal, Sequence, TypeAlias, TypeGuard
 
 
 @dataclass
@@ -12,10 +14,15 @@ class ActiveVehicle:
     junction_label: str
     lane_label: str
     position: float
+
     is_active: Literal[True] = field(default=True, init=False)
 
 
 Vehicle: TypeAlias = InactiveVehicle | ActiveVehicle
+
+
+def is_active_vehicle(vehicle: Vehicle) -> TypeGuard[ActiveVehicle]:
+    return vehicle.is_active
 
 
 class Vehicles:
@@ -46,11 +53,20 @@ class Vehicles:
         """Add a vehicle to the system.
 
         Initially the vehicle is in an inactive state and won't actually
-        perform any state.
+        perform any state updates.
         """
         label = self._make_vehicle_label(label)
         self._vehicles[label] = InactiveVehicle()
         return label
+
+    def move_to_lane_start(
+        self, vehicle_label: str, junction_label: str, lane_label: str
+    ) -> None:
+        """Move the specified vehicle on to the start of the given lane and activate it.
+
+        After calling this, the vehicle should move with state updates.
+        """
+        self._vehicles[vehicle_label] = ActiveVehicle(junction_label, lane_label, 0)
 
     def vehicle_labels(self) -> Sequence[str]:
         return tuple(self._vehicles.keys())
