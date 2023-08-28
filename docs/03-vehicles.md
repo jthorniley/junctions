@@ -7,7 +7,7 @@ it is on, and a position on that lane.
 Each junction is given a speed limit, and normally a vehicle moves
 along the junction at that speed limit.
 
-It's fairly arbitrary but its probably easiest to thing of the
+It's fairly arbitrary but its probably easiest to think of the
 dimensions and speeds in terms of meters and meters/second. So a lane
 separation of 5 means a 5-meter wide road. A speed of 11 means 11 m/s.
 
@@ -38,7 +38,7 @@ Algorithm: _MoveVehicles_
     1. Retrieve the corresponding speed limit for the lane the
        vehicle is on: $s_i$
     2. Calculate the movement of the vehicle: $m_i = s_i \Delta t$
-    3. Calculate a new lane position: $l_i(t+\Delta t)$=$l_i(t) + m_i$
+    3. Calculate a new lane position: $l_i(t+\Delta t) = l_i(t) + m_i$
     4. If the new lane position is greater than the total lane length,
        apply the _TransitionToNewLane_ algorithm.
 

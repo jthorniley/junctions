@@ -1,7 +1,8 @@
-import random
-from shutil import move
+from __future__ import annotations
 
-from junctions.network import Network
+import random
+from typing import TYPE_CHECKING
+
 from junctions.state.vehicles import (
     ActiveVehicle,
     InactiveVehicle,
@@ -9,6 +10,9 @@ from junctions.state.vehicles import (
     VehiclesState,
     is_active_vehicle,
 )
+
+if TYPE_CHECKING:
+    from junctions.network import Network
 
 
 class Stepper:
@@ -18,6 +22,7 @@ class Stepper:
         self._network = network
 
     def _calculate_vehicle_update(self, dt: float, vehicle: ActiveVehicle) -> Vehicle:
+        # the algorithm is defined in doc/03-vehicles.md
         speed = self._network.speed_limit(vehicle.junction_label, vehicle.lane_label)
         movement = speed * dt
 

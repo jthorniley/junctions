@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Iterable, Literal, Sequence, TypeAlias, TypeGuard
+from typing import Iterable, Literal, TypeAlias, TypeGuard
 
 
 @dataclass(frozen=True)
@@ -42,9 +42,10 @@ class VehiclesState:
                 if label.startswith("vehicle"):
                     try:
                         current_value = int(label[len("vehicle") :])
-                        i = max(i, current_value + 1)
                     except ValueError:
                         pass
+                    else:
+                        i = max(i, current_value + 1)
 
             return f"vehicle{i}"
 
