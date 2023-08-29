@@ -56,35 +56,25 @@ def run():
     win.view = Mat4.from_scale(Vec3(2, 2, 1))
 
     t = time()
-    vehicles_state = (
-        VehiclesState()
-        .add_vehicle(
-            ActiveVehicle(junction_label="road1", lane_label="a", position=10.0)
-        )
-        .add_vehicle(
-            ActiveVehicle(junction_label="road2", lane_label="b", position=10.0)
-        )
-        .add_vehicle(
-            ActiveVehicle(junction_label="road3", lane_label="b", position=10.0)
-        )
-    )
+    vehicles_state = VehiclesState()
+    last_new_vehicle_time = t
 
     @win.event
     def on_draw():
-        nonlocal vehicles_state, t
+        nonlocal vehicles_state, t, last_new_vehicle_time
         win.clear()
         network_renderer.draw()
 
         dt = time() - t
         t += dt
 
-        if random.random() < dt:
-            # Add approximately 1 vehicle/second
+        if random.random() / 2 < dt and last_new_vehicle_time < (t - 0.5):
             choices = (("road1", "a"), ("road2", "b"), ("road3", "b"))
             where = random.choice(choices)
             vehicles_state = vehicles_state.add_vehicle(
                 ActiveVehicle(where[0], where[1], 0.0)
             )
+            last_new_vehicle_time = t
 
         vehicles_state = stepper.step(dt, vehicles_state)
 

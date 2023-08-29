@@ -21,12 +21,12 @@ def _vehicle_shapes(
     lane = network.lane(vehicle.junction_label, vehicle.lane_label)
     pos = lane.interpolate(vehicle.position)
 
-    a = pos.point
     forward = Vec2(0, 1).rotate(-pos.bearing)
     right = Vec2(-1, 0).rotate(-pos.bearing)
-    b = pos.point - forward * 4
-    c = b + right * 3
-    d = c + forward * 4
+    a = pos.point + right * 0.5
+    b = a - forward * 3
+    c = b + right * 1.5
+    d = c + forward * 3
     return [
         pyglet.shapes.Polygon(
             (a[0], a[1]),
