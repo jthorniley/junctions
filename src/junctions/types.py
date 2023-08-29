@@ -1,5 +1,7 @@
 import math
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from enum import Enum
 from functools import cached_property
 from typing import ClassVar, Sequence, TypeAlias
 
@@ -7,10 +9,156 @@ from pyglet.math import Vec2
 
 
 @dataclass(frozen=True)
-class Lane:
-    start: Vec2
-    end: Vec2
-    length: float
+class PointWithBearing:
+    """A point with an associated direction/bearing.
+
+    This is a data type to encapsulate a representation of both where
+    a thing is and which direction it's facing.
+    """
+
+    point: Vec2
+    bearing: float
+
+
+class Lane(ABC):
+    """Represents any kind of lane.
+
+    A lane is mathematically a curve in 2D space. Therefore we can always
+    calculate:
+
+    * Its start point (coordinate)
+    * Its end point (coordinate)
+    * Its total length (the distance covered by the curve in space)
+    * Any intermediate point using the function interpolate(position), where
+      position is between 0 (the start) and the length parameter:
+
+        interpolate(0) == start
+        interpolate(length) == end
+
+      Note that inputs to interpolate() outside this range don't have to be
+      well defined, though its usually obvious what they "would" be.
+
+    Additionally, each point along the curve is associated with a "direction"
+    or "bearing" - the angle of the tangent vector to the curve at that point.
+    This is also calculated by the interpolate() function.
+    """
+
+    @property
+    @abstractmethod
+    def start(self) -> Vec2:
+        raise NotImplementedError()
+
+    @property
+    @abstractmethod
+    def end(self) -> Vec2:
+        raise NotImplementedError()
+
+    @property
+    @abstractmethod
+    def length(self) -> float:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def interpolate(self, position: float) -> PointWithBearing:
+        """Determine the position and direction of the lane at a given point.
+
+        The position is the distance from the start of the curve, so generally:
+
+            lane.interpolate(0).point == lane.start
+            lane.interpolate(lane.length) == lane.end
+        """
+
+        raise NotImplementedError()
+
+
+class StraightLane(Lane):
+    def __init__(self, start: Vec2, length: float, bearing: float):
+        self._start = start
+        self._length = length
+        self._bearing = bearing
+
+    @property
+    def start(self) -> Vec2:
+        return self._start
+
+    @cached_property
+    def end(self) -> Vec2:
+        return self._start + self.direction * self._length
+
+    @property
+    def length(self) -> float:
+        return self._length
+
+    @cached_property
+    def direction(self) -> Vec2:
+        """Direction the lane points in - as unit vector"""
+        return Vec2(0, 1).rotate(-self._bearing)
+
+    def interpolate(self, position: float) -> PointWithBearing:
+        return PointWithBearing(self._start + self.direction * position, self._bearing)
+
+
+class RotationDirection(Enum):
+    CLOCKWISE = 1
+    ANTI_CLOCKWISE = -1
+
+
+class ArcLane(Lane):
+    def __init__(
+        self,
+        start: Vec2,
+        radius: float,
+        start_bearing: float,
+        angular_length: float,
+        rotation_direction: RotationDirection = RotationDirection.CLOCKWISE,
+    ):
+        self._start = start
+        self._radius = radius
+        self._start_bearing = start_bearing
+        self._angular_length = angular_length
+        self._rotation_direction = rotation_direction
+
+    def _calculate_normal_from_bearing(self, bearing: float):
+        """The normal to the curve.
+
+        Points to opposite sides depending on rotation direction.
+        """
+
+        return Vec2(-self._rotation_direction.value, 0).rotate(-bearing)
+
+    @property
+    def radius(self) -> float:
+        return self._radius
+
+    @cached_property
+    def start_normal(self) -> Vec2:
+        return self._calculate_normal_from_bearing(self._start_bearing)
+
+    @property
+    def focus(self) -> Vec2:
+        return self._start - self.start_normal * self._radius
+
+    @property
+    def start(self) -> Vec2:
+        return self._start
+
+    @cached_property
+    def end(self) -> Vec2:
+        return self.interpolate(self.length).point
+
+    @cached_property
+    def length(self) -> float:
+        return self._angular_length * self._radius
+
+    def interpolate(self, position: float) -> PointWithBearing:
+        angular_position = position / self._radius
+        bearing = (
+            self._start_bearing + self._rotation_direction.value * angular_position
+        )
+
+        normal = self._calculate_normal_from_bearing(bearing)
+
+        return PointWithBearing(self.focus + normal * self._radius, bearing)
 
 
 @dataclass(frozen=True)
@@ -41,15 +189,10 @@ class Road:
     def lanes(self) -> dict[str, Lane]:
         """Road lanes, A then B"""
         a0 = Vec2(*self.origin)
-        course = Vec2(0, self.road_length).rotate(-self.bearing)
-        a1 = a0 + course
-        separation = Vec2(-self.lane_separation, 0).rotate(-self.bearing)
-        b0 = a1 + separation
-        b1 = a0 + separation
-
+        b0 = a0 + Vec2(-self.lane_separation, self.road_length).rotate(-self.bearing)
         return {
-            "a": Lane(a0, a1, self.road_length),
-            "b": Lane(b0, b1, self.road_length),
+            "a": StraightLane(a0, self.road_length, self.bearing),
+            "b": StraightLane(b0, self.road_length, self.bearing + math.pi),
         }
 
 
@@ -84,23 +227,28 @@ class Arc:
     lane_separation: float
 
     @cached_property
-    def lanes(self) -> dict[str, Lane]:
+    def lanes(self) -> dict[str, ArcLane]:
         a0 = Vec2(*self.origin)
-        origin_normal = Vec2(-1, 0).rotate(-self.bearing)
-        end_normal = Vec2(-1, 0).rotate(-self.bearing - self.arc_length)
 
-        return {
-            "a": Lane(
-                a0,
-                self.focus + end_normal * self.arc_radius,
-                self.arc_length * self.arc_radius,
-            ),
-            "b": Lane(
-                self.focus + end_normal * (self.arc_radius + self.lane_separation),
-                self.focus + origin_normal * (self.arc_radius + self.lane_separation),
-                self.arc_length * (self.arc_radius + self.lane_separation),
-            ),
-        }
+        a_lane = ArcLane(
+            a0,
+            radius=self.arc_radius,
+            start_bearing=self.bearing,
+            angular_length=self.arc_length,
+            rotation_direction=RotationDirection.CLOCKWISE,
+        )
+
+        b_radius = self.arc_radius + self.lane_separation
+        end_normal = Vec2(-1, 0).rotate(-self.bearing - self.arc_length)
+        b0 = a_lane.focus + end_normal * b_radius
+        b_lane = ArcLane(
+            b0,
+            radius=b_radius,
+            start_bearing=self.bearing + self.arc_length - math.pi,
+            angular_length=self.arc_length,
+            rotation_direction=RotationDirection.ANTI_CLOCKWISE,
+        )
+        return {"a": a_lane, "b": b_lane}
 
     @cached_property
     def focus(self) -> Vec2:

@@ -4,8 +4,7 @@ from typing import Sequence
 
 import pyglet
 from junctions.network import Network
-from junctions.types import Arc, Junction, Lane, Road, Tee
-from pyglet.math import Vec2
+from junctions.types import Arc, ArcLane, Junction, Lane, Road, Tee
 
 
 def _node_markers(
@@ -57,43 +56,37 @@ def _road_shapes(
     )
 
 
+def _arc_lane_shapes(lane: ArcLane, batch: pyglet.graphics.Batch):
+    point = lane.start
+    lines = []
+    n_points = int(max(10, (lane.radius**2) / 10))
+    for i in range(n_points):
+        next_point = lane.interpolate(i / (n_points - 1) * lane.length).point
+        lines.append(
+            pyglet.shapes.Line(
+                point.x,
+                point.y,
+                next_point.x,
+                next_point.y,
+                color=(103, 240, 90, 255),
+                batch=batch,
+            )
+        )
+        point = next_point
+
+    return lines
+
+
 def _arc_shapes(
     arc: Arc, batch: pyglet.graphics.Batch
 ) -> Sequence[pyglet.shapes.ShapeBase]:
-    lanes = arc.lanes
-    a0 = lanes["a"].start
-    b1 = lanes["b"].end
-    focus = arc.focus
-
-    def make_line(start_point, r):
-        point = start_point
-        lines = []
-        n_points = int(max(10, (r**2) / 10))
-        for i in range(n_points):
-            angle = -arc.bearing - arc.arc_length * (i / (n_points - 1))
-            next_point = focus + Vec2(-r, 0).rotate(angle)
-            lines.append(
-                pyglet.shapes.Line(
-                    point.x,
-                    point.y,
-                    next_point.x,
-                    next_point.y,
-                    color=(103, 240, 90, 255),
-                    batch=batch,
-                )
-            )
-            point = next_point
-
-        return lines
-
-    lane_a = make_line(a0, arc.arc_radius)
-    b_radius = arc.arc_radius + arc.lane_separation
-    lane_b = make_line(b1, b_radius)
+    lane_a = _arc_lane_shapes(arc.lanes["a"], batch)
+    lane_b = _arc_lane_shapes(arc.lanes["b"], batch)
     return (
         *lane_a,
         *lane_b,
-        *_node_markers(lanes["a"], batch),
-        *_node_markers(lanes["b"], batch),
+        *_node_markers(arc.lanes["a"], batch),
+        *_node_markers(arc.lanes["b"], batch),
     )
 
 
