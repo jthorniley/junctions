@@ -4,11 +4,8 @@ import random
 from typing import TYPE_CHECKING
 
 from junctions.state.vehicles import (
-    ActiveVehicle,
-    InactiveVehicle,
     Vehicle,
     VehiclesState,
-    is_active_vehicle,
 )
 
 if TYPE_CHECKING:
@@ -21,7 +18,7 @@ class Stepper:
     def __init__(self, network: Network):
         self._network = network
 
-    def _calculate_vehicle_update(self, dt: float, vehicle: ActiveVehicle) -> Vehicle:
+    def _calculate_vehicle_update(self, dt: float, vehicle: Vehicle) -> Vehicle | None:
         # the algorithm is defined in doc/03-vehicles.md
         speed = self._network.speed_limit(vehicle.junction_label, vehicle.lane_label)
         movement = speed * dt
@@ -42,16 +39,16 @@ class Stepper:
 
                 next_lane_speed_limit = self._network.speed_limit(*next_lane_label)
 
-                return ActiveVehicle(
+                return Vehicle(
                     junction_label=next_lane_label[0],
                     lane_label=next_lane_label[1],
                     position=t_excess * next_lane_speed_limit,
                 )
 
             else:
-                return InactiveVehicle()
+                return None
         else:
-            return ActiveVehicle(
+            return Vehicle(
                 junction_label=vehicle.junction_label,
                 lane_label=vehicle.lane_label,
                 position=next_position,
@@ -60,10 +57,9 @@ class Stepper:
     def step(self, dt: float, vehicles_state: VehiclesState) -> VehiclesState:
         """Perform a step with time interval dt"""
 
-        updates = {}
+        updates: dict[str, Vehicle | None] = {}
 
         for vehicle_label, vehicle in vehicles_state.items():
-            if is_active_vehicle(vehicle):
-                updates[vehicle_label] = self._calculate_vehicle_update(dt, vehicle)
+            updates[vehicle_label] = self._calculate_vehicle_update(dt, vehicle)
 
         return vehicles_state.with_updates(updates)

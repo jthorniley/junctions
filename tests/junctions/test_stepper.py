@@ -1,6 +1,6 @@
 import pytest
 from junctions.network import Network
-from junctions.state.vehicles import ActiveVehicle, VehiclesState, is_active_vehicle
+from junctions.state.vehicles import Vehicle, VehiclesState
 from junctions.stepper import Stepper
 from junctions.types import Road
 
@@ -13,7 +13,7 @@ def test_simple_step():
     network.add_junction(RoadFactory.build(), label="theroad")
 
     # ... and a vehicle on that road
-    vehicles = VehiclesState().add_vehicle(ActiveVehicle("theroad", "a", 0.0), "v1")
+    vehicles = VehiclesState().add_vehicle(Vehicle("theroad", "a", 0.0), "v1")
 
     # ... and a stepper constructed with the network
     stepper = Stepper(network)
@@ -23,7 +23,6 @@ def test_simple_step():
 
     # THEN the vehicle has moved
     vehicle = next_vehicle_state.vehicle("v1")
-    assert is_active_vehicle(vehicle)
     assert vehicle.junction_label == "theroad"
     assert vehicle.lane_label == "a"
     assert vehicle.position == pytest.approx(0.65)
@@ -45,10 +44,10 @@ def test_step_to_next_lane():
     # ... first vehicle is traverising the first road
     vehicles = (
         VehiclesState().add_vehicle(
-            ActiveVehicle("first_road", "a", 0.0), label="first_vehicle"
+            Vehicle("first_road", "a", 0.0), label="first_vehicle"
         )
         # ... second vehicle starts off at the other end on the second-road-b
-        .add_vehicle(ActiveVehicle("second_road", "b", 0.0), label="second_vehicle")
+        .add_vehicle(Vehicle("second_road", "b", 0.0), label="second_vehicle")
     )
 
     # WHEN i perform one step
@@ -58,8 +57,6 @@ def test_step_to_next_lane():
     # THEN the vehicles have moved
     first_vehicle = vehicles.vehicle("first_vehicle")
     second_vehicle = vehicles.vehicle("second_vehicle")
-    assert is_active_vehicle(first_vehicle)
-    assert is_active_vehicle(second_vehicle)
     assert first_vehicle.junction_label == "first_road"
     assert first_vehicle.lane_label == "a"
     assert first_vehicle.position == pytest.approx(1.5)
@@ -75,8 +72,6 @@ def test_step_to_next_lane():
     # THEN the first vehicle is still working its way along the slower road
     first_vehicle = vehicles.vehicle("first_vehicle")
     second_vehicle = vehicles.vehicle("second_vehicle")
-    assert is_active_vehicle(first_vehicle)
-    assert is_active_vehicle(second_vehicle)
     assert first_vehicle.junction_label == "first_road"
     assert first_vehicle.lane_label == "a"
     assert first_vehicle.position == pytest.approx(6)
@@ -92,8 +87,6 @@ def test_step_to_next_lane():
     # ... THEN the first vehicle has transitioned as expected
     first_vehicle = vehicles.vehicle("first_vehicle")
     second_vehicle = vehicles.vehicle("second_vehicle")
-    assert is_active_vehicle(first_vehicle)
-    assert is_active_vehicle(second_vehicle)
     assert first_vehicle.junction_label == "second_road"
     assert first_vehicle.lane_label == "a"
     assert first_vehicle.position == pytest.approx(1.0)
@@ -109,7 +102,8 @@ def test_step_to_next_lane():
     vehicles = stepper.step(0.1, vehicles)
     vehicles = stepper.step(0.1, vehicles)
 
-    first_vehicle = vehicles.vehicle("first_vehicle")
-    second_vehicle = vehicles.vehicle("second_vehicle")
-    assert not is_active_vehicle(first_vehicle)
-    assert not is_active_vehicle(second_vehicle)
+    with pytest.raises(KeyError):
+        first_vehicle = vehicles.vehicle("first_vehicle")
+
+    with pytest.raises(KeyError):
+        second_vehicle = vehicles.vehicle("second_vehicle")
