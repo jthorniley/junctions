@@ -1,6 +1,7 @@
 import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from enum import Enum
 from functools import cached_property
 from typing import ClassVar, Sequence, TypeAlias
 
@@ -20,7 +21,27 @@ class PointWithBearing:
 
 
 class Lane(ABC):
-    """Represents any kind of lane"""
+    """Represents any kind of lane.
+
+    A lane is mathematically a curve in 2D space. Therefore we can always
+    calculate:
+
+    * Its start point (coordinate)
+    * Its end point (coordinate)
+    * Its total length (the distance covered by the curve in space)
+    * Any intermediate point using the function interpolate(position), where
+      position is between 0 (the start) and the length parameter:
+
+        interpolate(0) == start
+        interpolate(length) == end
+
+      Note that inputs to interpolate() outside this range don't have to be
+      well defined, though its usually obvious what they "would" be.
+
+    Additionally, each point along the curve is associated with a "direction"
+    or "bearing" - the angle of the tangent vector to the curve at that point.
+    This is also calculated by the interpolate() function.
+    """
 
     @property
     @abstractmethod
@@ -77,6 +98,11 @@ class StraightLane(Lane):
         return PointWithBearing(self._start + self.direction * position, self._bearing)
 
 
+class RotationDirection(Enum):
+    CLOCKWISE = 1
+    ANTI_CLOCKWISE = -1
+
+
 class ArcLane(Lane):
     def __init__(
         self,
@@ -84,55 +110,55 @@ class ArcLane(Lane):
         radius: float,
         start_bearing: float,
         angular_length: float,
-        clockwise: bool = True,
+        rotation_direction: RotationDirection = RotationDirection.CLOCKWISE,
     ):
         self._start = start
-        self._start_bearing = start_bearing
         self._radius = radius
-        self._clockwise = clockwise
+        self._start_bearing = start_bearing
+        self._angular_length = angular_length
+        self._rotation_direction = rotation_direction
 
-        if clockwise:
-            start_normal = Vec2(-1, 0).rotate(-start_bearing)
-            self._focus = start - start_normal * radius
-            end_normal = Vec2(-1, 0).rotate(-start_bearing - angular_length)
-        else:
-            start_normal = Vec2(1, 0).rotate(-start_bearing)
-            self._focus = start - start_normal * radius
-            end_normal = Vec2(1, 0).rotate(-start_bearing + angular_length)
+    def _calculate_normal_from_bearing(self, bearing: float):
+        """The normal to the curve.
 
-        self._end = self._focus + end_normal * radius
+        Points to opposite sides depending on rotation direction.
+        """
 
-        self._length = angular_length * radius
+        return Vec2(-self._rotation_direction.value, 0).rotate(-bearing)
 
     @property
     def radius(self) -> float:
         return self._radius
 
+    @cached_property
+    def start_normal(self) -> Vec2:
+        return self._calculate_normal_from_bearing(self._start_bearing)
+
     @property
     def focus(self) -> Vec2:
-        return self._focus
+        return self._start - self.start_normal * self._radius
 
     @property
     def start(self) -> Vec2:
         return self._start
 
-    @property
+    @cached_property
     def end(self) -> Vec2:
-        return self._end
+        return self.interpolate(self.length).point
 
-    @property
+    @cached_property
     def length(self) -> float:
-        return self._length
+        return self._angular_length * self._radius
 
     def interpolate(self, position: float) -> PointWithBearing:
         angular_position = position / self._radius
-        if self._clockwise:
-            bearing = self._start_bearing + angular_position
-            normal = Vec2(-1, 0).rotate(-bearing)
-        else:
-            bearing = self._start_bearing - angular_position
-            normal = Vec2(1, 0).rotate(-bearing)
-        return PointWithBearing(self._focus + normal * self._radius, bearing)
+        bearing = (
+            self._start_bearing + self._rotation_direction.value * angular_position
+        )
+
+        normal = self._calculate_normal_from_bearing(bearing)
+
+        return PointWithBearing(self.focus + normal * self._radius, bearing)
 
 
 @dataclass(frozen=True)
@@ -209,6 +235,7 @@ class Arc:
             radius=self.arc_radius,
             start_bearing=self.bearing,
             angular_length=self.arc_length,
+            rotation_direction=RotationDirection.CLOCKWISE,
         )
 
         b_radius = self.arc_radius + self.lane_separation
@@ -219,7 +246,7 @@ class Arc:
             radius=b_radius,
             start_bearing=self.bearing + self.arc_length - math.pi,
             angular_length=self.arc_length,
-            clockwise=False,
+            rotation_direction=RotationDirection.ANTI_CLOCKWISE,
         )
         return {"a": a_lane, "b": b_lane}
 
