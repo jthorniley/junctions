@@ -239,8 +239,10 @@ class Arc:
         )
 
         b_radius = self.arc_radius + self.lane_separation
-        end_normal = Vec2(-1, 0).rotate(-self.bearing - self.arc_length)
-        b0 = a_lane.focus + end_normal * b_radius
+        b0 = (
+            a_lane.end
+            + Vec2(-1, 0).rotate(-self.bearing - self.arc_length) * self.lane_separation
+        )
         b_lane = ArcLane(
             b0,
             radius=b_radius,
