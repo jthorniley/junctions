@@ -1,28 +1,14 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Iterable, Literal, TypeAlias, TypeGuard
+from dataclasses import dataclass
+from typing import Iterable
 
 
 @dataclass(frozen=True)
-class InactiveVehicle:
-    is_active: Literal[False] = field(default=False, init=False)
-
-
-@dataclass(frozen=True)
-class ActiveVehicle:
+class Vehicle:
     junction_label: str
     lane_label: str
     position: float
-
-    is_active: Literal[True] = field(default=True, init=False)
-
-
-Vehicle: TypeAlias = InactiveVehicle | ActiveVehicle
-
-
-def is_active_vehicle(vehicle: Vehicle) -> TypeGuard[ActiveVehicle]:
-    return vehicle.is_active
 
 
 class VehiclesState:
@@ -65,10 +51,14 @@ class VehiclesState:
         new_state = self.with_updates({label: vehicle})
         return new_state
 
-    def with_updates(self, updates: dict[str, Vehicle]) -> VehiclesState:
+    def with_updates(self, updates: dict[str, Vehicle | None]) -> VehiclesState:
         new_state = VehiclesState()
         new_state._vehicles = self._vehicles.copy()
-        new_state._vehicles.update(updates)
+        for label, vehicle in updates.items():
+            if vehicle is None:
+                del new_state._vehicles[label]
+            else:
+                new_state._vehicles[label] = vehicle
         return new_state
 
     def items(self) -> Iterable[tuple[str, Vehicle]]:

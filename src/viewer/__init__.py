@@ -3,7 +3,7 @@ import random
 from time import time
 
 from junctions.network import Network
-from junctions.state.vehicles import ActiveVehicle, VehiclesState
+from junctions.state.vehicles import Vehicle, VehiclesState
 from junctions.stepper import Stepper
 from junctions.types import Road, Tee
 from pyglet import app, window
@@ -72,7 +72,7 @@ def run():
             choices = (("road1", "a"), ("road2", "b"), ("road3", "b"))
             where = random.choice(choices)
             vehicles_state = vehicles_state.add_vehicle(
-                ActiveVehicle(where[0], where[1], 0.0)
+                Vehicle(where[0], where[1], 0.0)
             )
             last_new_vehicle_time = t
 
