@@ -96,6 +96,10 @@ $$q(t) = \{n_v, w, l, x\}$$
   * The current vehicle position on its lane (can be unset if the
     vehicle is inactive): $x_i \in \${\empty, [0, L_{l_i}]\$}$.
 
+Additionally defined $Drain(i) = \{j : C_{ij}= 1\}$ - the set of lanes
+that lane $i$ connects to, and $Feed(i) = \{j : C_{ji}=1\}$ - the set
+of lanes that connect to lane $i$.
+
 We will assume these values have been suitably initialised and cover here
 the dynamic updates - i.e. how we simulate vehicle movement in the
 network.
@@ -128,14 +132,20 @@ simulating a time step $\Delta t$.
 $$MoveVehicles(Q, q(t), \Delta t, i) \to \{x_i, l_i, p_i\}$$
 
 1. Given a vehicle $i$ on lane $l = l_i$ where $l \neq \empty$:
+
 2. Propose a new vehicle position $x'_i = x_i + s_l \Delta t$.
+
 3. If the proposal is less than the lane length $x'_i \le L_l$:
+
    1. Take the proposal as the new position, do not change the other
       state variables - the function result is $\{x'_i, l_i, p_i\}$
+
 4. Else:
+
    1. Choose a new lane and calculate a position on that lane - the
       result for vehicle index $i$ is
-      $TransitionToNewLane(Q, q(t), i, x'_i)$
+
+      $$TransitionToNewLane(Q, q(t), i, x'_i)$$
 
 ### Function: _TransitionToNewLane_
 
@@ -147,30 +157,82 @@ $$TransitionToNewLane(Q, q(t), i, x'_i) \to \{x_i, l_i, p_i\}$$
 
 1. Given a vehicle index $i$ on lane $l$ which has a proposed lane 
    position $x'_i$ greater than the current lane length $L_{l}$.
+
 2. Determine the proposed next lane $l'_i$:
+
    1. If there is already a planned next lane, $p_i \neq \empty$:
+
       1. $l'_i = p_i$
+
    2. If $p_i = \empty$:
-      1. Pick a next lane index $l'_i$ at random such that 
-         $C_{ll'}=1$ - i.e. the current lane $l_i$ must be connected to 
-         the proposed lane $l'_i$ according to $C$.
-      2. If there are no such lanes in $C$, remove the vehicle from 
-         the simulation. This function returns 
+
+      1. Pick a next lane index $l'_i$ at random from $Drain(i)$.
+
+      2. If there are no such lanes ($Drain(i)$ is empty),
+         remove the vehicle from the simulation. This function returns 
          $\{\empty, \empty, \empty\}$.
+
 3. If the wait flag is set on the proposed lane: $w_{l'} = 1$:
+
    1. Use $l'$ as the planned next lane, but keep the vehicle $i$ at
       the end of the current lane. This function returns
+
       $$\{L_{l_i}, l_i, l'_i\}$$
+
 3. If the wait flag is not set: $w_{l'} = 0$:
+
    1. Invert the time step to find the amount of time the vehicle was
       past the end of its lane: $$t' = \frac{x'_i-L_{l_i}}{S_{l_i}}$$
+
    2. Calculate a new proposed lane position $x''_i$ on the new
       lane using the speed limit of the new lane. Generally assume that
       the new position will not be beyond the end of the next lane, but
       we will constrain it in case it would be: 
-         $$ x''_i = \min(S_{l'} t', L_{l'}) $$
+
+      $$ x''_i = \min(S_{l'} t', L_{l'}) $$
+
    3. Return the new position on the new lane, there is no planned
       next lane at this point:
+
       $$ \{x''_i, l'_i, \empty\} $$
 
 ### Function: _Wait_
+
+This function determines whether the wait flag $w_i$ should be set for
+lane $i$ in the network.
+
+   $$Wait(Q, q(t), i) \to w_i$$
+
+1. Establish $Priority(i)$ as the set of lanes that have priority 
+   over $i$.
+
+2. If there is a vehicle $j$ with $l_j \in Priority(i)$ then this function
+   is 1 - the wait flag should be set.
+
+3. Otherwise:
+   
+   1. Calculate the time it takes for a vehicle to enter and clear this lane
+      at the speed limit:
+      
+      $$T_i=L_iS_i$$
+
+   2. For all priority lanes $j \in Priority(i)$:
+
+      1. For all the feeder lanes $k \in Feed(j)$:
+
+         1. Find the vehicle $z$ with the maximum position on lane $k$:
+            
+            $$z = \argmax_{y}\{x_y : l_y = k\}$$
+
+         2. If that vehicle can reach the end of its lane in less than
+            the time needed to clear the junction:
+
+            $$T_i \gt S_k(L_k-x_k)$$
+
+            1. Then set the wait flag (this function returns 1)
+
+   3. If none of the above conditions are met, return 0 (clear the
+      wait flag).
+
+
+   
