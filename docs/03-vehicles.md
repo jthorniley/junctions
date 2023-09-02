@@ -21,17 +21,31 @@ lanes.
 
 In order to prevent collisions between vehicles, they can be prevented
 from crossing immediately into a new lane by putting a _wait_ flag on the
-connection. When a vehicle tries to cross a connection with a _wait_
-flag, it has to stop on its current lane until the connection is clear.
+lane they are moving to. When a vehicle tries to cross a connection with 
+a _wait_ flag set on the next lane, it has to stop on its current lane
+until the connection is clear. (This doesn't affect vehicles already on
+the target lane, which should continue moving to clear the lane).
 
+### T-Junction lane priority
 
+The principle with a T-junction is that traffic going straight on the
+main road has priority, and traffic turning in or out of the side road
+should wait for the lanes to be clear.
 
+Looking at the T-junction schematic, we have three sections consisting
+of two lanes each: the main road (straight road) with lanes 
+_Ma_ and _Mb_ and the two branches - branch A (arc) _Aa_ and _Ab_, 
+and branch B (another arc) with _Ba_ and _Bb_.
 
-Furthermore when is switches to lanes in junctions (e.g. T-Junctions) 
-we need to avoid collisions as the lanes cross each other. This is 
-achieved by setting a flag called _wait_ on lane connections as 
-appropriate - when a vehicle tries to cross such a connection, instead
-of moving across immediately it has to wait until the flag is cleared.
+![](images/t-junction-labels.png)
+
+We can define the wait condition to enter each lane based on the priority
+of the main road:
+
+* _Ma_ and _Mb_, and _Aa_ never have a wait condition
+* _Ab_ waits if it is not clear on _Ma_, _Mb_ or _Bb_.
+* _Ba_ waits if it is not clear on _Ma_.
+* _Bb_ waits if it is not clear on _Ma_ or _Aa_.
 
 ## Speed limits
 
