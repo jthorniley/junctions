@@ -68,35 +68,109 @@ For reference some speed limits close to common real world values:
 
 ## Vehicle dynamics
 
-So to model the vehicle dynamics, assume the following prerequisites:
+The system state consists of the static network definition:
 
-* We know which lane the vehicle is on.
-* We know the length of that lane (as in distance along the curve, so
-  for arcs that would be $r\theta$).
-* We know the speed limit of that lane.
+$$Q = \{N_l, C, L, S\}$$
 
-On each time step with a given change in time $\Delta t$, apply the _MoveVehicles_ algorithm.
+And the dynamic state variables:
 
-Algorithm: _MoveVehicles_
+$$q(t) = \{n_v, w, l, x\}$$
 
-1. For each vehicle in the simulation (with index $i$)
-    1. Retrieve the corresponding speed limit for the lane the
-       vehicle is on: $s_i$
-    2. Calculate the movement of the vehicle: $m_i = s_i \Delta t$
-    3. Calculate a new lane position: $l_i(t+\Delta t) = l_i(t) + m_i$
-    4. If the new lane position is greater than the total lane length,
-       apply the _TransitionToNewLane_ algorithm.
+* The number of lanes $N_l \in \mathbb{Z}^+$
+* The connection matrix $C$ which defines which lanes are connected.
+  For each lane index $i, j \in \{1\dots N_l\}^2$ we have a connection
+  indicated by $C_{ij} \in \{0, 1\}$.
+* For each lane with index $i \in \{1\dots N_l\}$:
+   * Length $L_i \in \mathbb{R}^+$.
+   * Speed limit $S_i \in \mathbb{R}^+$.
+   * Wait flag $w_i \in \{0, 1\}$.
+* The number of vehicles $n_v \in \mathbb{Z}^+$ (vehicles can be added and
+  removed).
+* For each vehicle with index $i \in \{1\dots n_v\}$.
+  * The index of the current lane for that vehicle (can be unset for
+    an inactive vehicle): $l_i \in \{\empty, 1\dots N_l\}$.
+  * The index of the proposed next lane for the vehicle: $p_i$. This
+    must be one of the lanes that follows on from the current lane $l_i$,
+    or it can be unset.
+    $$ p_i \in \{\empty, j : C_{l_i}j = 1\} $$
+  * The current vehicle position on its lane (can be unset if the
+    vehicle is inactive): $x_i \in \${\empty, [0, L_{l_i}]\$}$.
 
-Algorithm: _TransitionToNewLane_
+We will assume these values have been suitably initialised and cover here
+the dynamic updates - i.e. how we simulate vehicle movement in the
+network.
 
-1. Given a vehicle $i$ which has a lane position $l_i(t)$ greater than
-   the current lane length $L$.
-2. Invert the time step to find the amount of time the vehicle was
-   past the end of its lane:
-   $$t_{excess} = \frac{l_i(t)-L}{s_i}$$
-3. Choose a new lane $l'_i$ at random from the set of lanes connected
-   to $l_i$ in the network.
-   1. If there are no lanes connected, remove the vehicle from 
-      the simulation.
-5. Calculate the lane position on the new lane using the speed limit
-   of the new lane: $l'_i(t) = s'_i t_{excess}$
+On each discrete time step $\Delta t$, we apply
+the following algorithmic loop to update the vehicle positions and lanes:
+
+1. Calculate the next set of vehicle positions and lanes. For each
+   vehicle index $i$:
+
+   $$ \{x_i, l_i, p_i\}(t+\Delta t) = MoveVehicles(Q, q(t), \Delta t, i)$$
+
+2. For each lane index $i$, update the wait flags:
+
+   $$ w_i(t+\Delta t) = Wait(Q, q(t), i)$$
+
+3. The updated dynamic state consists of the results of steps 1 and 2:
+
+   $$ q(t+\Delta t) = \{x, l, p, w\}(t+\Delta t) $$
+
+   We can set $t=t + \Delta t$ and loop back to step 1 to continue the
+   simulation in discrete steps.
+
+### Function: _MoveVehicles_
+
+This function takes the current state and calculates a new set of
+position, lane and planned lane values for a given vehicle $i$ by
+simulating a time step $\Delta t$.
+
+$$MoveVehicles(Q, q(t), \Delta t, i) \to \{x_i, l_i, p_i\}$$
+
+1. Given a vehicle $i$ on lane $l = l_i$ where $l \neq \empty$:
+2. Propose a new vehicle position $x'_i = x_i + s_l \Delta t$.
+3. If the proposal is less than the lane length $x'_i \le L_l$:
+   1. Take the proposal as the new position, do not change the other
+      state variables - the function result is $\{x'_i, l_i, p_i\}$
+4. Else:
+   1. Choose a new lane and calculate a position on that lane - the
+      result for vehicle index $i$ is
+      $TransitionToNewLane(Q, q(t), i, x'_i)$
+
+### Function: _TransitionToNewLane_
+
+This function takes the current state for a given vehicle $i$ and
+a proposed new position $x'_i$ and calculates a suitable transition
+to a new lane as appropriate.
+
+$$TransitionToNewLane(Q, q(t), i, x'_i) \to \{x_i, l_i, p_i\}$$
+
+1. Given a vehicle index $i$ on lane $l$ which has a proposed lane 
+   position $x'_i$ greater than the current lane length $L_{l}$.
+2. Determine the proposed next lane $l'_i$:
+   1. If there is already a planned next lane, $p_i \neq \empty$:
+      1. $l'_i = p_i$
+   2. If $p_i = \empty$:
+      1. Pick a next lane index $l'_i$ at random such that 
+         $C_{ll'}=1$ - i.e. the current lane $l_i$ must be connected to 
+         the proposed lane $l'_i$ according to $C$.
+      2. If there are no such lanes in $C$, remove the vehicle from 
+         the simulation. This function returns 
+         $\{\empty, \empty, \empty\}$.
+3. If the wait flag is set on the proposed lane: $w_{l'} = 1$:
+   1. Use $l'$ as the planned next lane, but keep the vehicle $i$ at
+      the end of the current lane. This function returns
+      $$\{L_{l_i}, l_i, l'_i\}$$
+3. If the wait flag is not set: $w_{l'} = 0$:
+   1. Invert the time step to find the amount of time the vehicle was
+      past the end of its lane: $$t' = \frac{x'_i-L_{l_i}}{S_{l_i}}$$
+   2. Calculate a new proposed lane position $x''_i$ on the new
+      lane using the speed limit of the new lane. Generally assume that
+      the new position will not be beyond the end of the next lane, but
+      we will constrain it in case it would be: 
+         $$ x''_i = \min(S_{l'} t', L_{l'}) $$
+   3. Return the new position on the new lane, there is no planned
+      next lane at this point:
+      $$ \{x''_i, l'_i, \empty\} $$
+
+### Function: _Wait_
