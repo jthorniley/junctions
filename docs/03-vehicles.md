@@ -4,8 +4,39 @@ Vehicles are the main agents in the simulation. A vehicle's state
 consists mainly of its position in the network, i.e. which lane
 it is on, and a position on that lane.
 
-Each junction is given a speed limit, and normally a vehicle moves
-along the junction at that speed limit.
+## Moving around the map and lane priority
+
+Recall the logical form of the connectivity map: directed edges or 
+_lanes_ which are connected at vertices. Each vertex consists of zero
+or more _connections_ which are pairs of lanes which are connected
+from end-to-start.
+
+Each vehicle is simulated moving along a lane. When it reaches the end
+of the current lane it picks a connection (if there is one) which will
+move it (usually immediately) to the start of the next lane.
+
+Some lanes will physically conflict, for example at junctions like 
+T-junctions, the lanes emerging from the side cross over the main road
+lanes.
+
+In order to prevent collisions between vehicles, they can be prevented
+from crossing immediately into a new lane by putting a _wait_ flag on the
+connection. When a vehicle tries to cross a connection with a _wait_
+flag, it has to stop on its current lane until the connection is clear.
+
+
+
+
+Furthermore when is switches to lanes in junctions (e.g. T-Junctions) 
+we need to avoid collisions as the lanes cross each other. This is 
+achieved by setting a flag called _wait_ on lane connections as 
+appropriate - when a vehicle tries to cross such a connection, instead
+of moving across immediately it has to wait until the flag is cleared.
+
+## Speed limits
+
+Each lane is given a speed limit, and normally a vehicle moves
+along the lane at that speed limit.
 
 It's fairly arbitrary but its probably easiest to think of the
 dimensions and speeds in terms of meters and meters/second. So a lane
