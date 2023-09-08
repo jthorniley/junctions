@@ -20,28 +20,25 @@ class Stepper:
 
     def _calculate_vehicle_update(self, dt: float, vehicle: Vehicle) -> Vehicle | None:
         # the algorithm is defined in doc/03-vehicles.md
-        speed = self._network.speed_limit(vehicle.junction_label, vehicle.lane_label)
+        speed = self._network.speed_limit(vehicle.lane_ref)
         movement = speed * dt
 
         next_position = vehicle.position + movement
 
-        lane = self._network.lane(vehicle.junction_label, vehicle.lane_label)
+        lane = self._network.lane(vehicle.lane_ref)
 
         if (excess := next_position - lane.length) > 0:
             t_excess = excess / speed
 
-            next_lane_choices = self._network.connected_lanes(
-                vehicle.junction_label, vehicle.lane_label
-            )
+            next_lane_choices = self._network.connected_lanes(vehicle.lane_ref)
 
             if next_lane_choices:
-                next_lane_label = random.choice(next_lane_choices)
+                next_lane_ref = random.choice(next_lane_choices)
 
-                next_lane_speed_limit = self._network.speed_limit(*next_lane_label)
+                next_lane_speed_limit = self._network.speed_limit(next_lane_ref)
 
                 return Vehicle(
-                    junction_label=next_lane_label[0],
-                    lane_label=next_lane_label[1],
+                    lane_ref=next_lane_ref,
                     position=t_excess * next_lane_speed_limit,
                 )
 
@@ -49,8 +46,7 @@ class Stepper:
                 return None
         else:
             return Vehicle(
-                junction_label=vehicle.junction_label,
-                lane_label=vehicle.lane_label,
+                lane_ref=vehicle.lane_ref,
                 position=next_position,
             )
 

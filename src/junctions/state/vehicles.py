@@ -3,11 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable
 
+from junctions.network import LaneRef
+
 
 @dataclass(frozen=True)
 class Vehicle:
-    junction_label: str
-    lane_label: str
+    lane_ref: LaneRef
     position: float
 
 

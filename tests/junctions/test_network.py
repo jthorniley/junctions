@@ -1,5 +1,5 @@
 import pytest
-from junctions.network import Network
+from junctions.network import LaneRef, Network
 
 from tests.junctions.factories import ArcFactory, RoadFactory
 
@@ -128,23 +128,29 @@ def test_connectivity():
         network.add_junction(road)
 
     # WHEN I connect the roads together
-    network.connect_lanes("road1", "a", "road2", "a")
-    network.connect_lanes("road1", "b", "road2", "b")
+    network.connect_lanes(LaneRef("road1", "a"), LaneRef("road2", "a"))
+    network.connect_lanes(LaneRef("road1", "b"), LaneRef("road2", "b"))
     # THEN I can query the connectivity
-    assert network.connected_lanes("road1", "a") == (("road2", "a"),)
-    assert network.connected_lanes("road1", "b") == (("road2", "b"),)
+    assert network.connected_lanes(LaneRef("road1", "a")) == (LaneRef("road2", "a"),)
+    assert network.connected_lanes(LaneRef("road1", "b")) == (LaneRef("road2", "b"),)
 
     # WHEN I connect more lanes...
-    network.connect_lanes("road1", "a", "road3", "a")
-    network.connect_lanes("road1", "b", "road3", "b")
+    network.connect_lanes(LaneRef("road1", "a"), LaneRef("road3", "a"))
+    network.connect_lanes(LaneRef("road1", "b"), LaneRef("road3", "b"))
 
     # THEN I can query the connectivity
-    assert network.connected_lanes("road1", "a") == (("road2", "a"), ("road3", "a"))
-    assert network.connected_lanes("road1", "b") == (("road2", "b"), ("road3", "b"))
+    assert network.connected_lanes(LaneRef("road1", "a")) == (
+        LaneRef("road2", "a"),
+        LaneRef("road3", "a"),
+    )
+    assert network.connected_lanes(LaneRef("road1", "b")) == (
+        LaneRef("road2", "b"),
+        LaneRef("road3", "b"),
+    )
     # ... road2-a is not connected to anything
-    assert network.connected_lanes("road2", "a") == ()
+    assert network.connected_lanes(LaneRef("road2", "a")) == ()
     # ... blah-foo does not exist
-    assert network.connected_lanes("blah", "foo") == ()
+    assert network.connected_lanes(LaneRef("blah", "foo")) == ()
 
 
 def test_provide_speed_limits():
@@ -155,8 +161,8 @@ def test_provide_speed_limits():
     network.add_junction(RoadFactory.build())
 
     # THEN the default speed limit is 9m/s
-    assert network.speed_limit("road1", "a") == pytest.approx(9)
-    assert network.speed_limit("road1", "b") == pytest.approx(9)
+    assert network.speed_limit(LaneRef("road1", "a")) == pytest.approx(9)
+    assert network.speed_limit(LaneRef("road1", "b")) == pytest.approx(9)
 
 
 def test_default_speed_limit():
@@ -168,10 +174,10 @@ def test_default_speed_limit():
     network.add_junction(RoadFactory.build())
 
     # THEN all the speed limits are set to the default
-    assert network.speed_limit("road1", "a") == pytest.approx(12.1)
-    assert network.speed_limit("road1", "b") == pytest.approx(12.1)
-    assert network.speed_limit("road2", "a") == pytest.approx(12.1)
-    assert network.speed_limit("road2", "b") == pytest.approx(12.1)
+    assert network.speed_limit(LaneRef("road1", "a")) == pytest.approx(12.1)
+    assert network.speed_limit(LaneRef("road1", "b")) == pytest.approx(12.1)
+    assert network.speed_limit(LaneRef("road2", "a")) == pytest.approx(12.1)
+    assert network.speed_limit(LaneRef("road2", "b")) == pytest.approx(12.1)
 
 
 def test_custom_speed_limit_for_junction():
@@ -184,7 +190,7 @@ def test_custom_speed_limit_for_junction():
     network.add_junction(RoadFactory.build(), speed_limit=5)
 
     # THEN the lane speec limits are set as appropriate
-    assert network.speed_limit("road1", "a") == pytest.approx(15)
-    assert network.speed_limit("road1", "b") == pytest.approx(15)
-    assert network.speed_limit("road2", "a") == pytest.approx(5)
-    assert network.speed_limit("road2", "b") == pytest.approx(5)
+    assert network.speed_limit(LaneRef("road1", "a")) == pytest.approx(15)
+    assert network.speed_limit(LaneRef("road1", "b")) == pytest.approx(15)
+    assert network.speed_limit(LaneRef("road2", "a")) == pytest.approx(5)
+    assert network.speed_limit(LaneRef("road2", "b")) == pytest.approx(5)

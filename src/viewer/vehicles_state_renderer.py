@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 def _vehicle_shapes(
     vehicle: Vehicle, network: Network, batch: pyglet.graphics.Batch
 ) -> Sequence[pyglet.shapes.ShapeBase]:
-    lane = network.lane(vehicle.junction_label, vehicle.lane_label)
+    lane = network.lane(vehicle.lane_ref)
     pos = lane.interpolate(vehicle.position)
 
     forward = Vec2(0, 1).rotate(-pos.bearing)

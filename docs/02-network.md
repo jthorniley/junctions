@@ -76,7 +76,7 @@ later. We can assign the label ourselves or in this example
 let the `Network` class pick a unique label for us.
 
 ```python
->>> from junctions.network import Network
+>>> from junctions.network import Network, LaneRef
 >>> from junctions.types import Road
 
 >>> network = Network()
@@ -113,7 +113,7 @@ type, e.g. for roads it will be `'a'` and `'b'` for the two lanes.
 ('a', 'b')
 
 >>> # And we can look up the lanes
->>> network.lane(j1, 'a') == road1.lanes['a']
+>>> network.lane(LaneRef(j1, 'a')) == road1.lanes['a']
 True
 
 ```
@@ -126,11 +126,11 @@ is being connected.
 
 ```python
 >>> # Connect J1A end to J2A start
->>> network.connect_lanes(j1, 'a', j2, 'a')
+>>> network.connect_lanes(LaneRef(j1, 'a'), LaneRef(j2, 'a'))
 
 >>> # List all the connections made in the network
->>> network.connected_lanes(j1, 'a')
-(('road2', 'a'),)
+>>> network.connected_lanes(LaneRef(j1, 'a'))
+(LaneRef(junction='road2', lane='a'),)
 
 ```
 

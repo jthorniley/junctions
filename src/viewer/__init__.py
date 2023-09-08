@@ -2,7 +2,7 @@ import math
 import random
 from time import time
 
-from junctions.network import Network
+from junctions.network import LaneRef, Network
 from junctions.state.vehicles import Vehicle, VehiclesState
 from junctions.stepper import Stepper
 from junctions.types import Road, Tee
@@ -36,18 +36,18 @@ def run():
     network.add_junction(tee)
     network.add_junction(road1)
     network.add_junction(road2)
-    network.connect_lanes("road1", "a", "tee1", "a")
-    network.connect_lanes("road1", "a", "tee1", "c")
-    network.connect_lanes("road2", "b", "tee1", "b")
-    network.connect_lanes("road2", "b", "tee1", "f")
-    network.connect_lanes("road3", "b", "tee1", "d")
-    network.connect_lanes("road3", "b", "tee1", "e")
-    network.connect_lanes("tee1", "a", "road2", "a")
-    network.connect_lanes("tee1", "b", "road1", "b")
-    network.connect_lanes("tee1", "c", "road3", "a")
-    network.connect_lanes("tee1", "d", "road1", "b")
-    network.connect_lanes("tee1", "e", "road2", "a")
-    network.connect_lanes("tee1", "f", "road3", "a")
+    network.connect_lanes(LaneRef("road1", "a"), LaneRef("tee1", "a"))
+    network.connect_lanes(LaneRef("road1", "a"), LaneRef("tee1", "c"))
+    network.connect_lanes(LaneRef("road2", "b"), LaneRef("tee1", "b"))
+    network.connect_lanes(LaneRef("road2", "b"), LaneRef("tee1", "f"))
+    network.connect_lanes(LaneRef("road3", "b"), LaneRef("tee1", "d"))
+    network.connect_lanes(LaneRef("road3", "b"), LaneRef("tee1", "e"))
+    network.connect_lanes(LaneRef("tee1", "a"), LaneRef("road2", "a"))
+    network.connect_lanes(LaneRef("tee1", "b"), LaneRef("road1", "b"))
+    network.connect_lanes(LaneRef("tee1", "c"), LaneRef("road3", "a"))
+    network.connect_lanes(LaneRef("tee1", "d"), LaneRef("road1", "b"))
+    network.connect_lanes(LaneRef("tee1", "e"), LaneRef("road2", "a"))
+    network.connect_lanes(LaneRef("tee1", "f"), LaneRef("road3", "a"))
 
     network_renderer = NetworkRenderer(network)
     stepper = Stepper(network)
@@ -69,11 +69,13 @@ def run():
         t += dt
 
         if random.random() / 2 < dt and last_new_vehicle_time < (t - 0.5):
-            choices = (("road1", "a"), ("road2", "b"), ("road3", "b"))
-            where = random.choice(choices)
-            vehicles_state = vehicles_state.add_vehicle(
-                Vehicle(where[0], where[1], 0.0)
+            choices = (
+                LaneRef("road1", "a"),
+                LaneRef("road2", "b"),
+                LaneRef("road3", "b"),
             )
+            where = random.choice(choices)
+            vehicles_state = vehicles_state.add_vehicle(Vehicle(where, 0.0))
             last_new_vehicle_time = t
 
         vehicles_state = stepper.step(dt, vehicles_state)
