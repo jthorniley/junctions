@@ -53,9 +53,11 @@ class Stepper:
     def step(self, dt: float, vehicles_state: VehiclesState) -> VehiclesState:
         """Perform a step with time interval dt"""
 
-        updates: dict[str, Vehicle | None] = {}
+        next_vehicles_state = VehiclesState()
 
         for vehicle_label, vehicle in vehicles_state.items():
-            updates[vehicle_label] = self._calculate_vehicle_update(dt, vehicle)
+            next_vehicle = self._calculate_vehicle_update(dt, vehicle)
+            if next_vehicle is not None:
+                next_vehicles_state.add_vehicle(next_vehicle, vehicle_label)
 
-        return vehicles_state.with_updates(updates)
+        return next_vehicles_state

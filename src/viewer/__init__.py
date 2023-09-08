@@ -75,7 +75,7 @@ def run():
                 LaneRef("road3", "b"),
             )
             where = random.choice(choices)
-            vehicles_state = vehicles_state.add_vehicle(Vehicle(where, 0.0))
+            vehicles_state.add_vehicle(Vehicle(where, 0.0))
             last_new_vehicle_time = t
 
         vehicles_state = stepper.step(dt, vehicles_state)

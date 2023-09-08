@@ -13,7 +13,8 @@ def test_simple_step():
     network.add_junction(RoadFactory.build(), label="theroad")
 
     # ... and a vehicle on that road
-    vehicles = VehiclesState().add_vehicle(Vehicle(LaneRef("theroad", "a"), 0.0), "v1")
+    vehicles = VehiclesState()
+    vehicles.add_vehicle(Vehicle(LaneRef("theroad", "a"), 0.0), "v1")
 
     # ... and a stepper constructed with the network
     stepper = Stepper(network)
@@ -42,12 +43,13 @@ def test_step_to_next_lane():
     network.connect_lanes(LaneRef("second_road", "b"), LaneRef("first_road", "b"))
 
     # ... first vehicle is traverising the first road
-    vehicles = (
-        VehiclesState().add_vehicle(
-            Vehicle(LaneRef("first_road", "a"), 0.0), label="first_vehicle"
-        )
-        # ... second vehicle starts off at the other end on the second-road-b
-        .add_vehicle(Vehicle(LaneRef("second_road", "b"), 0.0), label="second_vehicle")
+    vehicles = VehiclesState()
+    vehicles.add_vehicle(
+        Vehicle(LaneRef("first_road", "a"), 0.0), label="first_vehicle"
+    )
+    # ... second vehicle starts off at the other end on the second-road-b
+    vehicles.add_vehicle(
+        Vehicle(LaneRef("second_road", "b"), 0.0), label="second_vehicle"
     )
 
     # WHEN i perform one step
