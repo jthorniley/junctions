@@ -80,6 +80,9 @@ $$q(t) = \{n_v, w, l, x\}$$
 * The connection matrix $C$ which defines which lanes are connected.
   For each lane index $i, j \in \{1\dots N_l\}^2$ we have a connection
   indicated by $C_{ij} \in \{0, 1\}$.
+  * From this define $Drain(i) = \{j : C_{ij}= 1\}$ - the set of lanes
+    that lane $i$ connects to, and $Feed(i) = \{j : C_{ji}=1\}$ - the set
+    of lanes that connect to lane $i$.
 * For each lane with index $i \in \{1\dots N_l\}$:
    * Length $L_i \in \mathbb{R}^+$.
    * Speed limit $S_i \in \mathbb{R}^+$.
@@ -92,13 +95,9 @@ $$q(t) = \{n_v, w, l, x\}$$
   * The index of the proposed next lane for the vehicle: $p_i$. This
     must be one of the lanes that follows on from the current lane $l_i$,
     or it can be unset.
-    $$ p_i \in \{\empty, j : C_{l_i}j = 1\} $$
+    $$ p_i \in \empty , Drain(l_i) $$
   * The current vehicle position on its lane (can be unset if the
-    vehicle is inactive): $x_i \in \${\empty, [0, L_{l_i}]\$}$.
-
-Additionally defined $Drain(i) = \{j : C_{ij}= 1\}$ - the set of lanes
-that lane $i$ connects to, and $Feed(i) = \{j : C_{ji}=1\}$ - the set
-of lanes that connect to lane $i$.
+    vehicle is inactive): $x_i \in \{\empty, [0, L_{l_i}]\}$.
 
 We will assume these values have been suitably initialised and cover here
 the dynamic updates - i.e. how we simulate vehicle movement in the
@@ -110,7 +109,7 @@ the following algorithmic loop to update the vehicle positions and lanes:
 1. Calculate the next set of vehicle positions and lanes. For each
    vehicle index $i$:
 
-   $$ \{x_i, l_i, p_i\}(t+\Delta t) = MoveVehicles(Q, q(t), \Delta t, i)$$
+   $$ \{x_i(t+\Delta t), l_i(t+\Delta t), p_i(t+\Delta t)\} = MoveVehicles(Q, q(t), \Delta t, i)$$
 
 2. For each lane index $i$, update the wait flags:
 
@@ -118,7 +117,7 @@ the following algorithmic loop to update the vehicle positions and lanes:
 
 3. The updated dynamic state consists of the results of steps 1 and 2:
 
-   $$ q(t+\Delta t) = \{x, l, p, w\}(t+\Delta t) $$
+   $$ q(t+\Delta t) = \{x(t+\Delta t), l(t+\Delta t), p(t+\Delta t), w(t+\Delta t)\} $$
 
    We can set $t=t + \Delta t$ and loop back to step 1 to continue the
    simulation in discrete steps.
