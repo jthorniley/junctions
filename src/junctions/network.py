@@ -80,4 +80,8 @@ class Network:
         return self._lane_speed_limits[lane_ref]
 
     def priority_lanes(self, lane_ref: LaneRef) -> Sequence[LaneRef]:
-        raise NotImplementedError()
+        junc = self.junction(lane_ref.junction)
+        return tuple(
+            LaneRef(lane_ref.junction, lane)
+            for lane in junc.priority_over_lane(lane_ref.lane)
+        )
