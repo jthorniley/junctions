@@ -3,6 +3,7 @@ from __future__ import annotations
 import random
 from typing import TYPE_CHECKING
 
+from junctions.priority_wait import priority_wait
 from junctions.state.vehicles import (
     Vehicle,
     VehiclesState,
@@ -18,6 +19,7 @@ class Stepper:
 
     def __init__(self, network: Network):
         self._network = network
+        self._wait_flags: WaitFlags | None = None
 
     def _calculate_vehicle_update(self, dt: float, vehicle: Vehicle) -> Vehicle | None:
         # the algorithm is defined in doc/03-vehicles.md
@@ -54,6 +56,8 @@ class Stepper:
     def step(self, dt: float, vehicles_state: VehiclesState) -> VehiclesState:
         """Perform a step with time interval dt"""
 
+        self._wait_flags = priority_wait(self._network, vehicles_state)
+
         next_vehicles_state = VehiclesState()
 
         for vehicle_label, vehicle in vehicles_state.items():
@@ -63,6 +67,6 @@ class Stepper:
 
         return next_vehicles_state
 
-    def wait(self, vehicles_state: VehiclesState) -> WaitFlags:
-        """Calculate wait flags according to network and current vehicle states"""
-        raise NotImplementedError()
+    @property
+    def wait_flags(self) -> WaitFlags | None:
+        return self._wait_flags

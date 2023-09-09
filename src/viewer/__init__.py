@@ -50,7 +50,6 @@ def run():
     network.connect_lanes(LaneRef("tee1", "e"), LaneRef("road2", "a"))
     network.connect_lanes(LaneRef("tee1", "f"), LaneRef("road3", "a"))
 
-    network_renderer = NetworkRenderer(network)
     stepper = Stepper(network)
 
     # Double the scale
@@ -64,7 +63,6 @@ def run():
     def on_draw():
         nonlocal vehicles_state, t, last_new_vehicle_time
         win.clear()
-        network_renderer.draw()
 
         dt = time() - t
         t += dt
@@ -81,7 +79,9 @@ def run():
 
         vehicles_state = stepper.step(dt, vehicles_state)
 
+        network_renderer = NetworkRenderer(network, stepper.wait_flags)
         vehicles_state_renderer = VehiclesStateRenderer(network, vehicles_state)
+        network_renderer.draw()
         vehicles_state_renderer.draw()
 
     app.run()

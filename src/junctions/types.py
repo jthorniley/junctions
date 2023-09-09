@@ -178,7 +178,7 @@ class Road:
     ![](images/a-b.png)
     """
 
-    LANE_LABELS: ClassVar[Sequence[str]] = ("a", "b")
+    LANE_LABELS: ClassVar[tuple[str, str]] = ("a", "b")
 
     origin: tuple[float, float]
     bearing: float
@@ -221,7 +221,7 @@ class Arc:
     ![](images/arc.png)
     """
 
-    LANE_LABELS: ClassVar[Sequence[str]] = ("a", "b")
+    LANE_LABELS: ClassVar[tuple[str, str]] = ("a", "b")
 
     origin: tuple[float, float]
     bearing: float
@@ -279,7 +279,14 @@ class Tee:
     The parameters of the components are constrained by the above.
     """
 
-    LANE_LABELS: ClassVar[[Sequence[str]]] = ("a", "b", "c", "d", "e", "f")
+    LANE_LABELS: ClassVar[[tuple[str, str, str, str, str, str]]] = (
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+    )
 
     origin: tuple[float, float]
     main_road_bearing: float
