@@ -153,6 +153,27 @@ def test_connectivity():
     assert network.connected_lanes(LaneRef("blah", "foo")) == ()
 
 
+def test_feeder_lanes():
+    # GIVEN a network
+    network = Network()
+
+    # road a has two feeder lanes
+    network.add_junction(RoadFactory.build(), label="road_a")
+    network.add_junction(RoadFactory.build(), label="road_b")
+    network.add_junction(RoadFactory.build(), label="road_c")
+
+    network.connect_lanes(LaneRef("road_b", "a"), LaneRef("road_a", "a"))
+    network.connect_lanes(LaneRef("road_c", "a"), LaneRef("road_a", "a"))
+    network.connect_lanes(LaneRef("road_c", "a"), LaneRef("road_b", "b"))
+
+    # ASSERT correct results from feeder_lanes
+
+    assert tuple(network.feeder_lanes(LaneRef("road_a", "a"))) == (
+        LaneRef("road_b", "a"),
+        LaneRef("road_c", "a"),
+    )
+
+
 def test_provide_speed_limits():
     # GIVEN a network with no speed limit supplied
     network = Network()
