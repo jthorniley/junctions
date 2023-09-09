@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Iterable, Sequence
 
 from junctions.types import Junction, Lane
 
@@ -85,3 +85,8 @@ class Network:
             LaneRef(lane_ref.junction, lane)
             for lane in junc.priority_over_lane(lane_ref.lane)
         )
+
+    def all_lanes(self) -> Iterable[LaneRef]:
+        for junction_label, junction in self._junctions.items():
+            for lane_label in junction.lanes.keys():
+                yield LaneRef(junction_label, lane_label)
