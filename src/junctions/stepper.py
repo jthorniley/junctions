@@ -7,6 +7,7 @@ from junctions.state.vehicles import (
     Vehicle,
     VehiclesState,
 )
+from junctions.state.wait_flags import WaitFlags
 
 if TYPE_CHECKING:
     from junctions.network import Network
@@ -61,3 +62,7 @@ class Stepper:
                 next_vehicles_state.add_vehicle(next_vehicle, vehicle_label)
 
         return next_vehicles_state
+
+    def wait(self, vehicles_state: VehiclesState) -> WaitFlags:
+        """Calculate wait flags according to network and current vehicle states"""
+        raise NotImplementedError()

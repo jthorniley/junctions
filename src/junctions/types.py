@@ -195,6 +195,9 @@ class Road:
             "b": StraightLane(b0, self.road_length, self.bearing + math.pi),
         }
 
+    def priority_over_lane(self, lane: str) -> Sequence[str]:
+        return ()
+
 
 @dataclass(frozen=True)
 class Arc:
@@ -258,6 +261,9 @@ class Arc:
         origin_normal = Vec2(-1, 0).rotate(-self.bearing)
         return a0 - origin_normal * self.arc_radius
 
+    def priority_over_lane(self, lane: str) -> Sequence[str]:
+        return ()
+
 
 @dataclass(frozen=True)
 class Tee:
@@ -273,7 +279,7 @@ class Tee:
     The parameters of the components are constrained by the above.
     """
 
-    LANE_LABELS: ClassVar[Sequence[str]] = ("a", "b", "c", "d", "e", "f")
+    LANE_LABELS: ClassVar[[Sequence[str]]] = ("a", "b", "c", "d", "e", "f")
 
     origin: tuple[float, float]
     main_road_bearing: float
@@ -321,6 +327,20 @@ class Tee:
             "e": self.branch_b.lanes["a"],
             "f": self.branch_b.lanes["b"],
         }
+
+    def priority_over_lane(self, lane: str) -> Sequence[str]:
+        """Which lanes have priority over the given lane."""
+        match lane:
+            case "a" | "b" | "c":
+                return ()
+            case "d":
+                return ("a", "b", "f")
+            case "e":
+                return ("a",)
+            case "f":
+                return ("a", "c")
+
+        raise ValueError(f"not a lane label: {lane}")
 
 
 Junction: TypeAlias = Road | Arc | Tee

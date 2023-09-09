@@ -78,3 +78,6 @@ class Network:
 
     def speed_limit(self, lane_ref: LaneRef) -> float:
         return self._lane_speed_limits[lane_ref]
+
+    def priority_lanes(self, lane_ref: LaneRef) -> Sequence[LaneRef]:
+        raise NotImplementedError()
