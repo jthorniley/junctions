@@ -26,8 +26,9 @@ def run():
         lane_separation=6,
     )
     road1 = Road((140, 100), bearing=math.pi / 2, road_length=80, lane_separation=6)
+    road_2_start = tee.branch_a.lanes["a"].end
     road2 = Road(
-        (*tee.branch_a.lanes["a"].end,),
+        (road_2_start.x, road_2_start.y),
         bearing=math.pi,
         road_length=50,
         lane_separation=6,

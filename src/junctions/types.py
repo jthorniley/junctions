@@ -301,8 +301,10 @@ class Tee:
 
     @cached_property
     def branch_b(self) -> Arc:
+        start_vec = self.branch_a.lanes["b"].start
+        start = (start_vec.x, start_vec.y)
         return Arc(
-            origin=(*self.branch_a.lanes["b"].start,),
+            origin=start,
             bearing=self.main_road_bearing - math.pi / 2,
             arc_length=math.pi / 2,
             arc_radius=self.branch_a.arc_radius,
