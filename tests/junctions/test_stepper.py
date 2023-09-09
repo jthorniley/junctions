@@ -42,7 +42,7 @@ def test_step_to_next_lane():
     network.connect_lanes(LaneRef("first_road", "a"), LaneRef("second_road", "a"))
     network.connect_lanes(LaneRef("second_road", "b"), LaneRef("first_road", "b"))
 
-    # ... first vehicle is traverising the first road
+    # ... first vehicle is traversing the first road
     vehicles = VehiclesState()
     vehicles.add_vehicle(
         Vehicle(LaneRef("first_road", "a"), 0.0), label="first_vehicle"
@@ -109,3 +109,45 @@ def test_step_to_next_lane():
 
     with pytest.raises(KeyError):
         second_vehicle = vehicles.vehicle("second_vehicle")
+
+
+def test_stops_if_vehicle_is_in_front():
+    # GIVEN a single road with two vehicles
+    network = Network(default_speed_limit=10)
+    network.add_junction(Road((0, 0), 0, 100, 5))
+    vehicles = VehiclesState()
+    vehicles.add_vehicle(Vehicle(LaneRef("road1", "a"), 0), label="v1")
+    vehicles.add_vehicle(Vehicle(LaneRef("road1", "a"), 4.5), label="v2")
+
+    # WHEN I step
+    stepper = Stepper(network)
+    vehicles = stepper.step(0.1, vehicles)
+
+    # THEN only the one in front moves
+    assert vehicles.vehicle("v1").position == pytest.approx(0.0)
+    assert vehicles.vehicle("v2").position == pytest.approx(5.5)
+
+    # now the vehicle is far in front, on the next step both vehicles should move
+    vehicles = stepper.step(0.1, vehicles)
+    assert vehicles.vehicle("v1").position == pytest.approx(1.0)
+    assert vehicles.vehicle("v2").position == pytest.approx(6.5)
+
+
+def test_stops_if_vehicles_are_on_top():
+    # This should be more of an edge case, but if two vehicles get into
+    # the exact same position, ONE should move and ONE should stop,
+    # so that they get unstuck in a logical way
+
+    network = Network(default_speed_limit=10)
+    network.add_junction(Road((0, 0), 0, 100, 5))
+    vehicles = VehiclesState()
+    vehicles.add_vehicle(Vehicle(LaneRef("road1", "a"), 0), label="v1")
+    vehicles.add_vehicle(Vehicle(LaneRef("road1", "a"), 0), label="v2")
+
+    # WHEN I step
+    stepper = Stepper(network)
+    vehicles = stepper.step(0.1, vehicles)
+
+    # THEN only the one in front moves
+    assert vehicles.vehicle("v1").position == pytest.approx(0.0)
+    assert vehicles.vehicle("v2").position == pytest.approx(1.0)

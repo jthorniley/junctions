@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 from collections import defaultdict
-from operator import attrgetter
+from operator import attrgetter, itemgetter
 from typing import TYPE_CHECKING, Final
 
 from junctions.network import LaneRef
@@ -84,32 +84,34 @@ class Stepper:
 
         next_vehicles_state = VehiclesState()
 
-        lane_vehicle_map: defaultdict[LaneRef, list[Vehicle]] = defaultdict(list)
-        for _, vehicle in vehicles_state.items():
-            lane_vehicle_map[vehicle.lane_ref].append(vehicle)
+        lane_vehicle_map: defaultdict[LaneRef, list[tuple[str, float]]] = defaultdict(
+            list
+        )
+        for vehicle_label, vehicle in vehicles_state.items():
+            lane_vehicle_map[vehicle.lane_ref].append((vehicle_label, vehicle.position))
 
         for _, vehicles in lane_vehicle_map.items():
-            vehicles.sort(key=attrgetter("position"))
+            vehicles.sort(key=itemgetter(1))
 
-        for vehicle_label, vehicle in vehicles_state.items():
-            stop_for_separation = False
-            for vehicle_on_same_lane in lane_vehicle_map[vehicle.lane_ref]:
-                if (
-                    vehicle_on_same_lane.position > vehicle.position
-                    and vehicle_on_same_lane.position
-                    < (vehicle.position + VEHICLE_SEPARATION_LIMIT)
-                ):
-                    stop_for_separation = True
-                    break
+        for lane_ref, lane_vehicles in lane_vehicle_map.items():
+            for vehicle_index, (vehicle_label, vehicle_position) in enumerate(
+                lane_vehicles
+            ):
+                if vehicle_index < len(lane_vehicles) - 1:
+                    next_vehicle_position = lane_vehicles[vehicle_index + 1][1]
+                    if next_vehicle_position < (
+                        vehicle_position + VEHICLE_SEPARATION_LIMIT
+                    ):
+                        next_vehicles_state.add_vehicle(
+                            Vehicle(lane_ref, vehicle_position), vehicle_label
+                        )
+                        continue
 
-            if stop_for_separation:
-                # Leave vehicle stopped
-                next_vehicles_state.add_vehicle(vehicle, vehicle_label)
-                continue
-
-            next_vehicle = self._calculate_vehicle_update(dt, vehicle_label, vehicle)
-            if next_vehicle is not None:
-                next_vehicles_state.add_vehicle(next_vehicle, vehicle_label)
+                next_vehicle = self._calculate_vehicle_update(
+                    dt, vehicle_label, Vehicle(lane_ref, vehicle_position)
+                )
+                if next_vehicle is not None:
+                    next_vehicles_state.add_vehicle(next_vehicle, vehicle_label)
 
         return next_vehicles_state
 
