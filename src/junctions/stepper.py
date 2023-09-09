@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import random
-from typing import TYPE_CHECKING
+from collections import defaultdict
+from operator import attrgetter
+from typing import TYPE_CHECKING, Final
 
 from junctions.network import LaneRef
 from junctions.priority_wait import priority_wait
@@ -13,6 +15,8 @@ from junctions.state.wait_flags import WaitFlags
 
 if TYPE_CHECKING:
     from junctions.network import Network
+
+VEHICLE_SEPARATION_LIMIT: Final = 5
 
 
 class Stepper:
@@ -80,7 +84,29 @@ class Stepper:
 
         next_vehicles_state = VehiclesState()
 
+        lane_vehicle_map: defaultdict[LaneRef, list[Vehicle]] = defaultdict(list)
+        for _, vehicle in vehicles_state.items():
+            lane_vehicle_map[vehicle.lane_ref].append(vehicle)
+
+        for _, vehicles in lane_vehicle_map.items():
+            vehicles.sort(key=attrgetter("position"))
+
         for vehicle_label, vehicle in vehicles_state.items():
+            stop_for_separation = False
+            for vehicle_on_same_lane in lane_vehicle_map[vehicle.lane_ref]:
+                if (
+                    vehicle_on_same_lane.position > vehicle.position
+                    and vehicle_on_same_lane.position
+                    < (vehicle.position + VEHICLE_SEPARATION_LIMIT)
+                ):
+                    stop_for_separation = True
+                    break
+
+            if stop_for_separation:
+                # Leave vehicle stopped
+                next_vehicles_state.add_vehicle(vehicle, vehicle_label)
+                continue
+
             next_vehicle = self._calculate_vehicle_update(dt, vehicle_label, vehicle)
             if next_vehicle is not None:
                 next_vehicles_state.add_vehicle(next_vehicle, vehicle_label)

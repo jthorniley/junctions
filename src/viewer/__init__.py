@@ -67,8 +67,10 @@ def run():
         dt = time() - t
         t += dt
 
-        if random.random() / 2 < dt and last_new_vehicle_time < (t - 0.5):
+        if random.random() * 2 < dt and last_new_vehicle_time < (t - 0.5):
             choices = (
+                LaneRef("road1", "a"),
+                LaneRef("road2", "b"),
                 LaneRef("road1", "a"),
                 LaneRef("road2", "b"),
                 LaneRef("road3", "b"),
