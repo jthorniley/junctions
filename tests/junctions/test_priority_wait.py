@@ -12,6 +12,18 @@ def simple_t_junction_network():
     network.add_junction(Tee((0, 100), 0, 20, 5), label="tee")
     network.add_junction(Road((0, 120), 0, 100, 5), label="main_road_2")
     network.add_junction(Road((5, 105), math.pi / 2, 100, 5), label="side_road")
+    network.connect_lanes(LaneRef("main_road_1", "a"), LaneRef("tee", "a"))
+    network.connect_lanes(LaneRef("main_road_1", "a"), LaneRef("tee", "c"))
+    network.connect_lanes(LaneRef("tee", "a"), LaneRef("main_road_2", "a"))
+    network.connect_lanes(LaneRef("tee", "b"), LaneRef("main_road_1", "b"))
+    network.connect_lanes(LaneRef("tee", "c"), LaneRef("side_road", "a"))
+    network.connect_lanes(LaneRef("tee", "d"), LaneRef("main_road_1", "b"))
+    network.connect_lanes(LaneRef("tee", "e"), LaneRef("main_road_2", "a"))
+    network.connect_lanes(LaneRef("tee", "f"), LaneRef("side_road", "a"))
+    network.connect_lanes(LaneRef("main_road_2", "b"), LaneRef("tee", "b"))
+    network.connect_lanes(LaneRef("main_road_2", "b"), LaneRef("tee", "f"))
+    network.connect_lanes(LaneRef("side_road", "b"), LaneRef("tee", "d"))
+    network.connect_lanes(LaneRef("side_road", "b"), LaneRef("tee", "e"))
     return network
 
 
