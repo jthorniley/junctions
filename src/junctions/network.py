@@ -76,6 +76,13 @@ class Network:
     def connected_lanes(self, lane_ref: LaneRef) -> Sequence[LaneRef]:
         return tuple(self._connected_lanes.get(lane_ref, []))
 
+    def feeder_lanes(self, lane_ref: LaneRef) -> Iterable[LaneRef]:
+        for junction_label, junction in self._junctions.items():
+            for lane_label in junction.LANE_LABELS:
+                ref = LaneRef(junction_label, lane_label)
+                if lane_ref in self._connected_lanes.get(ref, []):
+                    yield ref
+
     def speed_limit(self, lane_ref: LaneRef) -> float:
         return self._lane_speed_limits[lane_ref]
 
@@ -85,6 +92,9 @@ class Network:
             LaneRef(lane_ref.junction, lane)
             for lane in junc.priority_over_lane(lane_ref.lane)
         )
+
+    def all_junctions(self) -> Iterable[tuple[str, Junction]]:
+        return self._junctions.items()
 
     def all_lanes(self) -> Iterable[LaneRef]:
         for junction_label, junction in self._junctions.items():

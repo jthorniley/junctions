@@ -213,7 +213,7 @@ lane $i$ in the network.
    1. Calculate the time it takes for a vehicle to enter and clear this lane
       at the speed limit:
       
-      $$T_i=L_iS_i$$
+      $$T_i=\frac{L_i}{S_i}$$
 
    2. For all priority lanes $j \in Priority(i)$:
 
@@ -226,7 +226,7 @@ lane $i$ in the network.
          2. If that vehicle can reach the end of its lane in less than
             the time needed to clear the junction:
 
-            $$T_i \gt S_k(L_k-x_k)$$
+            $$T_i \gt \frac{L_k-x_k}{S_k}$$
 
             1. Then set the wait flag (this function returns 1)
 
