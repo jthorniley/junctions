@@ -31,8 +31,8 @@ For example in this illustration:
 * It has two lanes $\mathrm{A}$ and $\mathrm{B}$, or if we need to 
   disambiguate them from another junction call them 
   $\mathrm{J1A}$ and $\mathrm{J1B}$.
-* Each lane has an in and and out node, 
-  $\mathrm{J1A_{in}}$, $\mathrm{J1A_{out}}$ etc.
+* Each lane has an in and out node,  $\mathrm{J1A_{in}}$, 
+  $\mathrm{J1A_{out}}$ etc.
 
 
 ![](images/in-out.png)
@@ -60,10 +60,8 @@ are not true lanes).
 
 ![](images/network-derived.png)
 
-This is a directed graph / digraph. The lanes can be thought of as
-edges and the lane in/out points are vertices. Each vertex can be at
-the "out" of (at most) one lane but connected it to zero or many "in"
-points of subsequent lanes.
+This is a directed graph / digraph where the edges are lanes. The
+vertices are where lane in and out points connect.
 
 ## Representing the graph in Python
 
