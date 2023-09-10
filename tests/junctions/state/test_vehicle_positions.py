@@ -1,7 +1,9 @@
+import numpy as np
 import pytest
 from factory.random import randgen
 from junctions.network import LaneRef
 from junctions.state.vehicle_positions import VehiclePositions
+from numpy.testing import assert_almost_equal, assert_array_equal
 
 
 def test_vehicle_positions():
@@ -14,8 +16,8 @@ def test_vehicle_positions():
     road_b = LaneRef(junction="road", lane="b")
 
     # act/assert - getting the lane refs is empty
-    assert vehicle_positions[road_a] == ()
-    assert vehicle_positions[road_b] == ()
+    assert vehicle_positions.by_lane[road_a].shape == (0,)
+    assert vehicle_positions.by_lane[road_b].shape == (0,)
 
 
 def test_add_vehicle():
@@ -26,16 +28,17 @@ def test_add_vehicle():
     road_b = LaneRef(junction="road", lane="b")
 
     # act put some new vehicles in lanes
-    vehicle_positions.create_vehicle(road_a, 2.0)
-    vehicle_positions.create_vehicle(road_a, 1.0)
-    vehicle_positions.create_vehicle(road_a, 3.0)
-    vehicle_positions.create_vehicle(road_b, 0.5)
+    v1 = vehicle_positions.create_vehicle(road_a, 2.0)
+    v2 = vehicle_positions.create_vehicle(road_a, 1.0)
+    v3 = vehicle_positions.create_vehicle(road_a, 3.0)
+    v4 = vehicle_positions.create_vehicle(road_b, 0.5)
 
     # ASSERT: can recall the positions, they come out sorted
-    assert len(vehicle_positions[road_a])
-    assert vehicle_positions[road_a][0] == pytest.approx(1.0)
-    assert vehicle_positions[road_a][1] == pytest.approx(2.0)
-    assert vehicle_positions[road_a][2] == pytest.approx(3.0)
+    assert_almost_equal(vehicle_positions.by_lane[road_a], [1.0, 2.0, 3.0])
+    assert_almost_equal(vehicle_positions.by_lane[road_b], [0.5])
+
+    assert_array_equal(vehicle_positions.ids_by_lane[road_a], np.array([v2, v1, v3]))
+    assert_array_equal(vehicle_positions.ids_by_lane[road_b], np.array([v4]))
 
 
 @pytest.mark.parametrize("_fuzz", range(20))
@@ -50,5 +53,5 @@ def test_vehicle_position_sort(_fuzz):
         vehicle_positions.create_vehicle(LaneRef("a", "a"), value)
 
     # Assert - the list should be sorted when retrieved
-    sorted_values = sorted(values)
-    assert list(vehicle_positions[LaneRef("a", "a")]) == sorted_values
+    sorted_values = np.array(sorted(values), dtype=np.float32)
+    assert_almost_equal(vehicle_positions.by_lane[LaneRef("a", "a")], sorted_values)
