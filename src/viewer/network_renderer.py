@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-from typing import Sequence
+from typing import Final, Sequence
 
 import pyglet
-from junctions.network import Network
+from junctions.network import LaneRef, Network
+from junctions.state.wait_flags import WaitFlags
 from junctions.types import Arc, ArcLane, Junction, Lane, Road, Tee
+
+DEFAULT_LANE_COLOR: Final = (103, 240, 90, 255)
+WAIT_LANE_COLOR: Final = (243, 40, 90, 255)
 
 
 def _node_markers(
@@ -28,15 +32,18 @@ def _node_markers(
 
 
 def _road_shapes(
-    road: Road, batch: pyglet.graphics.Batch
+    road: Road,
+    wait_flags: tuple[bool, bool],
+    batch: pyglet.graphics.Batch,
 ) -> Sequence[pyglet.shapes.ShapeBase]:
     lanes = road.lanes
+
     lane_a = pyglet.shapes.Line(
         lanes["a"].start.x,
         lanes["a"].start.y,
         lanes["a"].end.x,
         lanes["a"].end.y,
-        color=(103, 240, 90, 255),
+        color=WAIT_LANE_COLOR if wait_flags[0] else DEFAULT_LANE_COLOR,
         batch=batch,
     )
     lane_b = pyglet.shapes.Line(
@@ -44,7 +51,7 @@ def _road_shapes(
         lanes["b"].start.y,
         lanes["b"].end.x,
         lanes["b"].end.y,
-        color=(103, 240, 90, 255),
+        color=WAIT_LANE_COLOR if wait_flags[1] else DEFAULT_LANE_COLOR,
         batch=batch,
     )
 
@@ -56,7 +63,9 @@ def _road_shapes(
     )
 
 
-def _arc_lane_shapes(lane: ArcLane, batch: pyglet.graphics.Batch):
+def _arc_lane_shapes(
+    lane: ArcLane, color: tuple[int, int, int, int], batch: pyglet.graphics.Batch
+):
     point = lane.start
     lines = []
     n_points = int(max(10, (lane.radius**2) / 10))
@@ -68,7 +77,7 @@ def _arc_lane_shapes(lane: ArcLane, batch: pyglet.graphics.Batch):
                 point.y,
                 next_point.x,
                 next_point.y,
-                color=(103, 240, 90, 255),
+                color=color,
                 batch=batch,
             )
         )
@@ -78,10 +87,16 @@ def _arc_lane_shapes(lane: ArcLane, batch: pyglet.graphics.Batch):
 
 
 def _arc_shapes(
-    arc: Arc, batch: pyglet.graphics.Batch
+    arc: Arc,
+    wait_flags: tuple[bool, bool],
+    batch: pyglet.graphics.Batch,
 ) -> Sequence[pyglet.shapes.ShapeBase]:
-    lane_a = _arc_lane_shapes(arc.lanes["a"], batch)
-    lane_b = _arc_lane_shapes(arc.lanes["b"], batch)
+    lane_a = _arc_lane_shapes(
+        arc.lanes["a"], WAIT_LANE_COLOR if wait_flags[0] else DEFAULT_LANE_COLOR, batch
+    )
+    lane_b = _arc_lane_shapes(
+        arc.lanes["b"], WAIT_LANE_COLOR if wait_flags[1] else DEFAULT_LANE_COLOR, batch
+    )
     return (
         *lane_a,
         *lane_b,
@@ -91,19 +106,21 @@ def _arc_shapes(
 
 
 def _tee_shapes(
-    tee: Tee, batch: pyglet.graphics.Batch
+    tee: Tee,
+    wait_flags: tuple[bool, bool, bool, bool, bool, bool],
+    batch: pyglet.graphics.Batch,
 ) -> Sequence[pyglet.shapes.ShapeBase]:
     return (
-        *_road_shapes(tee.main_road, batch),
-        *_arc_shapes(tee.branch_a, batch),
-        *_arc_shapes(tee.branch_b, batch),
+        *_road_shapes(tee.main_road, wait_flags[:2], batch),
+        *_arc_shapes(tee.branch_a, wait_flags[2:4], batch),
+        *_arc_shapes(tee.branch_b, wait_flags[4:], batch),
     )
 
 
 class NetworkRenderer:
-    def __init__(self, network: Network):
+    def __init__(self, network: Network, wait_flags: WaitFlags | None = None):
         self._junctions: dict[str, Sequence[pyglet.shapes.ShapeBase]] = {}
-
+        self._wait_flags = wait_flags or WaitFlags()
         self._batch: pyglet.graphics.Batch = pyglet.graphics.Batch()
         for junction_label in network.junction_labels():
             junction = network.junction(junction_label)
@@ -115,10 +132,35 @@ class NetworkRenderer:
     def _add_junction(self, label: str, junction: Junction):
         match junction:
             case Road():
-                self._junctions[label] = _road_shapes(junction, self._batch)
+                self._junctions[label] = _road_shapes(
+                    junction,
+                    (
+                        self._wait_flags[LaneRef(label, junction.LANE_LABELS[0])],
+                        self._wait_flags[LaneRef(label, junction.LANE_LABELS[1])],
+                    ),
+                    self._batch,
+                )
 
             case Arc():
-                self._junctions[label] = _arc_shapes(junction, self._batch)
+                self._junctions[label] = _arc_shapes(
+                    junction,
+                    (
+                        self._wait_flags[LaneRef(label, junction.LANE_LABELS[0])],
+                        self._wait_flags[LaneRef(label, junction.LANE_LABELS[1])],
+                    ),
+                    self._batch,
+                )
 
             case Tee():
-                self._junctions[label] = _tee_shapes(junction, self._batch)
+                self._junctions[label] = _tee_shapes(
+                    junction,
+                    (
+                        self._wait_flags[LaneRef(label, junction.LANE_LABELS[0])],
+                        self._wait_flags[LaneRef(label, junction.LANE_LABELS[1])],
+                        self._wait_flags[LaneRef(label, junction.LANE_LABELS[2])],
+                        self._wait_flags[LaneRef(label, junction.LANE_LABELS[3])],
+                        self._wait_flags[LaneRef(label, junction.LANE_LABELS[4])],
+                        self._wait_flags[LaneRef(label, junction.LANE_LABELS[5])],
+                    ),
+                    self._batch,
+                )

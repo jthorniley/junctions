@@ -1,14 +1,23 @@
-from typing import Sequence
+from dataclasses import dataclass
+from typing import Iterable, Sequence
 
 from junctions.types import Junction, Lane
+
+
+@dataclass(frozen=True)
+class LaneRef:
+    """Reference a lane by labels (junction/lane)"""
+
+    junction: str
+    lane: str
 
 
 class Network:
     def __init__(self, default_speed_limit: float = 9.0):
         self._default_speed_limit = default_speed_limit
         self._junctions: dict[str, Junction] = {}
-        self._connected_lanes: dict[tuple[str, str], list[tuple[str, str]]] = {}
-        self._lane_speed_limits: dict[tuple[str, str], float] = {}
+        self._connected_lanes: dict[LaneRef, list[LaneRef]] = {}
+        self._lane_speed_limits: dict[LaneRef, float] = {}
 
     def _make_junction_label(self, junction: Junction, label: str | None = None) -> str:
         if label is None:
@@ -40,7 +49,7 @@ class Network:
         self._junctions[label] = junction
 
         for lane_label in junction.LANE_LABELS:
-            self._lane_speed_limits[(label, lane_label)] = (
+            self._lane_speed_limits[LaneRef(label, lane_label)] = (
                 self._default_speed_limit if speed_limit is None else speed_limit
             )
 
@@ -56,26 +65,38 @@ class Network:
         junction = self.junction(junction_label)
         return junction.LANE_LABELS
 
-    def lane(self, junction_label: str, lane_label: str) -> Lane:
+    def lane(self, lane_ref: LaneRef) -> Lane:
         """Retrieve a lane by junction and lane label"""
-        junction = self.junction(junction_label)
-        return junction.lanes[lane_label]
+        junction = self.junction(lane_ref.junction)
+        return junction.lanes[lane_ref.lane]
 
-    def connect_lanes(
-        self,
-        junction_label_1: str,
-        lane_label_1: str,
-        junction_label_2: str,
-        lane_label_2: str,
-    ) -> None:
-        self._connected_lanes.setdefault((junction_label_1, lane_label_1), []).append(
-            (junction_label_2, lane_label_2)
+    def connect_lanes(self, lane_ref_1: LaneRef, lane_ref_2: LaneRef) -> None:
+        self._connected_lanes.setdefault(lane_ref_1, []).append(lane_ref_2)
+
+    def connected_lanes(self, lane_ref: LaneRef) -> Sequence[LaneRef]:
+        return tuple(self._connected_lanes.get(lane_ref, []))
+
+    def feeder_lanes(self, lane_ref: LaneRef) -> Iterable[LaneRef]:
+        for junction_label, junction in self._junctions.items():
+            for lane_label in junction.LANE_LABELS:
+                ref = LaneRef(junction_label, lane_label)
+                if lane_ref in self._connected_lanes.get(ref, []):
+                    yield ref
+
+    def speed_limit(self, lane_ref: LaneRef) -> float:
+        return self._lane_speed_limits[lane_ref]
+
+    def priority_lanes(self, lane_ref: LaneRef) -> Sequence[LaneRef]:
+        junc = self.junction(lane_ref.junction)
+        return tuple(
+            LaneRef(lane_ref.junction, lane)
+            for lane in junc.priority_over_lane(lane_ref.lane)
         )
 
-    def connected_lanes(
-        self, junction_label: str, lane_label: str
-    ) -> Sequence[tuple[str, str]]:
-        return tuple(self._connected_lanes.get((junction_label, lane_label), []))
+    def all_junctions(self) -> Iterable[tuple[str, Junction]]:
+        return self._junctions.items()
 
-    def speed_limit(self, junction_label: str, lane_label: str) -> float:
-        return self._lane_speed_limits[(junction_label, lane_label)]
+    def all_lanes(self) -> Iterable[LaneRef]:
+        for junction_label, junction in self._junctions.items():
+            for lane_label in junction.lanes.keys():
+                yield LaneRef(junction_label, lane_label)

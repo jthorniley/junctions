@@ -178,7 +178,7 @@ class Road:
     ![](images/a-b.png)
     """
 
-    LANE_LABELS: ClassVar[Sequence[str]] = ("a", "b")
+    LANE_LABELS: ClassVar[tuple[str, str]] = ("a", "b")
 
     origin: tuple[float, float]
     bearing: float
@@ -194,6 +194,9 @@ class Road:
             "a": StraightLane(a0, self.road_length, self.bearing),
             "b": StraightLane(b0, self.road_length, self.bearing + math.pi),
         }
+
+    def priority_over_lane(self, lane: str) -> Sequence[str]:
+        return ()
 
 
 @dataclass(frozen=True)
@@ -218,7 +221,7 @@ class Arc:
     ![](images/arc.png)
     """
 
-    LANE_LABELS: ClassVar[Sequence[str]] = ("a", "b")
+    LANE_LABELS: ClassVar[tuple[str, str]] = ("a", "b")
 
     origin: tuple[float, float]
     bearing: float
@@ -258,6 +261,9 @@ class Arc:
         origin_normal = Vec2(-1, 0).rotate(-self.bearing)
         return a0 - origin_normal * self.arc_radius
 
+    def priority_over_lane(self, lane: str) -> Sequence[str]:
+        return ()
+
 
 @dataclass(frozen=True)
 class Tee:
@@ -273,7 +279,14 @@ class Tee:
     The parameters of the components are constrained by the above.
     """
 
-    LANE_LABELS: ClassVar[Sequence[str]] = ("a", "b", "c", "d", "e", "f")
+    LANE_LABELS: ClassVar[[tuple[str, str, str, str, str, str]]] = (
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+    )
 
     origin: tuple[float, float]
     main_road_bearing: float
@@ -301,8 +314,10 @@ class Tee:
 
     @cached_property
     def branch_b(self) -> Arc:
+        start_vec = self.branch_a.lanes["b"].start
+        start = (start_vec.x, start_vec.y)
         return Arc(
-            origin=(*self.branch_a.lanes["b"].start,),
+            origin=start,
             bearing=self.main_road_bearing - math.pi / 2,
             arc_length=math.pi / 2,
             arc_radius=self.branch_a.arc_radius,
@@ -319,6 +334,20 @@ class Tee:
             "e": self.branch_b.lanes["a"],
             "f": self.branch_b.lanes["b"],
         }
+
+    def priority_over_lane(self, lane: str) -> Sequence[str]:
+        """Which lanes have priority over the given lane."""
+        match lane:
+            case "a" | "b" | "c":
+                return ()
+            case "d":
+                return ("a", "b", "f")
+            case "e":
+                return ("a",)
+            case "f":
+                return ("a", "c")
+
+        raise ValueError(f"not a lane label: {lane}")
 
 
 Junction: TypeAlias = Road | Arc | Tee

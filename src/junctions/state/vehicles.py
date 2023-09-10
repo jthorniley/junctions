@@ -3,20 +3,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable
 
+from junctions.network import LaneRef
+
 
 @dataclass(frozen=True)
 class Vehicle:
-    junction_label: str
-    lane_label: str
+    lane_ref: LaneRef
     position: float
 
 
 class VehiclesState:
-    """State object for vehicles.
-
-    State is designed to be immutable, so any changes make a new copy of the state.
-    This helps to ensure consistent state and state updates.
-    """
+    """State object for vehicles."""
 
     def __init__(self):
         self._vehicles: dict[str, Vehicle] = {}
@@ -46,20 +43,9 @@ class VehiclesState:
     def vehicle(self, label: str) -> Vehicle:
         return self._vehicles[label]
 
-    def add_vehicle(self, vehicle: Vehicle, label: str | None = None) -> VehiclesState:
+    def add_vehicle(self, vehicle: Vehicle, label: str | None = None) -> None:
         label = self._make_vehicle_label(label)
-        new_state = self.with_updates({label: vehicle})
-        return new_state
-
-    def with_updates(self, updates: dict[str, Vehicle | None]) -> VehiclesState:
-        new_state = VehiclesState()
-        new_state._vehicles = self._vehicles.copy()
-        for label, vehicle in updates.items():
-            if vehicle is None:
-                del new_state._vehicles[label]
-            else:
-                new_state._vehicles[label] = vehicle
-        return new_state
+        self._vehicles[label] = vehicle
 
     def items(self) -> Iterable[tuple[str, Vehicle]]:
         return self._vehicles.items()
