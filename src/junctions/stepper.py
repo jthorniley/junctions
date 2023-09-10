@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 from collections import defaultdict
-from operator import attrgetter, itemgetter
+from operator import itemgetter
 from typing import TYPE_CHECKING, Final
 
 from junctions.network import LaneRef
