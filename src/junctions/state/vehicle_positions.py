@@ -7,7 +7,7 @@ import numpy as np
 from junctions.network import LaneRef
 
 
-class VehiclePositionsByLane:
+class _VehiclePositionsByLane:
     def __init__(self, storage: Mapping[LaneRef, np.ndarray]) -> None:
         self._storage = storage
 
@@ -15,7 +15,7 @@ class VehiclePositionsByLane:
         return self._storage[lane_ref]["position"]
 
 
-class VehicleIdsByLane:
+class _VehicleIdsByLane:
     def __init__(self, storage: Mapping[LaneRef, np.ndarray]) -> None:
         self._storage = storage
 
@@ -52,9 +52,9 @@ class VehiclePositions:
         return new_id
 
     @property
-    def by_lane(self) -> VehiclePositionsByLane:
-        return VehiclePositionsByLane(self._storage)
+    def by_lane(self) -> _VehiclePositionsByLane:
+        return _VehiclePositionsByLane(self._storage)
 
     @property
-    def ids_by_lane(self) -> VehicleIdsByLane:
-        return VehicleIdsByLane(self._storage)
+    def ids_by_lane(self) -> _VehicleIdsByLane:
+        return _VehicleIdsByLane(self._storage)
