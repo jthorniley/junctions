@@ -1,15 +1,15 @@
 from collections import defaultdict
 
 from junctions.network import LaneRef, Network
-from junctions.state.vehicles import Vehicle, VehiclesState
+from junctions.state.vehicles import _Vehicle, _VehiclesState
 from junctions.state.wait_flags import WaitFlags
 
 
-def priority_wait(network: Network, vehicles_state: VehiclesState) -> WaitFlags:
+def priority_wait(network: Network, vehicles_state: _VehiclesState) -> WaitFlags:
     """Calculate wait flags across network"""
     wait_flags = WaitFlags()
 
-    lane_vehicle_map: defaultdict[LaneRef, list[Vehicle]] = defaultdict(list)
+    lane_vehicle_map: defaultdict[LaneRef, list[_Vehicle]] = defaultdict(list)
     for _, vehicle in vehicles_state.items():
         lane_vehicle_map[vehicle.lane_ref].append(vehicle)
 

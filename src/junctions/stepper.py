@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING, Final
 from junctions.network import LaneRef
 from junctions.priority_wait import priority_wait
 from junctions.state.vehicles import (
-    Vehicle,
-    VehiclesState,
+    _Vehicle,
+    _VehiclesState,
 )
 from junctions.state.wait_flags import WaitFlags
 
@@ -28,8 +28,8 @@ class Stepper:
         self._vehicle_planned_next_lane: dict[str, LaneRef] = {}
 
     def _calculate_vehicle_update(
-        self, dt: float, vehicle_label: str, vehicle: Vehicle
-    ) -> Vehicle | None:
+        self, dt: float, vehicle_label: str, vehicle: _Vehicle
+    ) -> _Vehicle | None:
         # the algorithm is defined in doc/03-vehicles.md
         speed = self._network.speed_limit(vehicle.lane_ref)
         movement = speed * dt
@@ -53,7 +53,7 @@ class Stepper:
             if next_lane_ref:
                 if self._wait_flags and self._wait_flags[next_lane_ref]:
                     # Next lane is wait, set vehicle to end of current lane
-                    return Vehicle(lane_ref=vehicle.lane_ref, position=lane.length)
+                    return _Vehicle(lane_ref=vehicle.lane_ref, position=lane.length)
                 else:
                     t_excess = excess / speed
 
@@ -64,7 +64,7 @@ class Stepper:
                     except KeyError:
                         ...
 
-                    return Vehicle(
+                    return _Vehicle(
                         lane_ref=next_lane_ref,
                         position=t_excess * next_lane_speed_limit,
                     )
@@ -72,17 +72,17 @@ class Stepper:
             else:
                 return None
         else:
-            return Vehicle(
+            return _Vehicle(
                 lane_ref=vehicle.lane_ref,
                 position=next_position,
             )
 
-    def step(self, dt: float, vehicles_state: VehiclesState) -> VehiclesState:
+    def step(self, dt: float, vehicles_state: _VehiclesState) -> _VehiclesState:
         """Perform a step with time interval dt"""
 
         self._wait_flags = priority_wait(self._network, vehicles_state)
 
-        next_vehicles_state = VehiclesState()
+        next_vehicles_state = _VehiclesState()
 
         lane_vehicle_map: defaultdict[LaneRef, list[tuple[str, float]]] = defaultdict(
             list
@@ -103,12 +103,12 @@ class Stepper:
                         vehicle_position + VEHICLE_SEPARATION_LIMIT
                     ):
                         next_vehicles_state.add_vehicle(
-                            Vehicle(lane_ref, vehicle_position), vehicle_label
+                            _Vehicle(lane_ref, vehicle_position), vehicle_label
                         )
                         continue
 
                 next_vehicle = self._calculate_vehicle_update(
-                    dt, vehicle_label, Vehicle(lane_ref, vehicle_position)
+                    dt, vehicle_label, _Vehicle(lane_ref, vehicle_position)
                 )
                 if next_vehicle is not None:
                     next_vehicles_state.add_vehicle(next_vehicle, vehicle_label)

@@ -1,6 +1,6 @@
 import pytest
 from junctions.network import LaneRef, Network
-from junctions.state.vehicles import Vehicle, VehiclesState
+from junctions.state.vehicles import _Vehicle, _VehiclesState
 from junctions.stepper import Stepper
 from junctions.types import Road
 
@@ -13,8 +13,8 @@ def test_simple_step():
     network.add_junction(RoadFactory.build(), label="theroad")
 
     # ... and a vehicle on that road
-    vehicles = VehiclesState()
-    vehicles.add_vehicle(Vehicle(LaneRef("theroad", "a"), 0.0), "v1")
+    vehicles = _VehiclesState()
+    vehicles.add_vehicle(_Vehicle(LaneRef("theroad", "a"), 0.0), "v1")
 
     # ... and a stepper constructed with the network
     stepper = Stepper(network)
@@ -43,13 +43,13 @@ def test_step_to_next_lane():
     network.connect_lanes(LaneRef("second_road", "b"), LaneRef("first_road", "b"))
 
     # ... first vehicle is traversing the first road
-    vehicles = VehiclesState()
+    vehicles = _VehiclesState()
     vehicles.add_vehicle(
-        Vehicle(LaneRef("first_road", "a"), 0.0), label="first_vehicle"
+        _Vehicle(LaneRef("first_road", "a"), 0.0), label="first_vehicle"
     )
     # ... second vehicle starts off at the other end on the second-road-b
     vehicles.add_vehicle(
-        Vehicle(LaneRef("second_road", "b"), 0.0), label="second_vehicle"
+        _Vehicle(LaneRef("second_road", "b"), 0.0), label="second_vehicle"
     )
 
     # WHEN i perform one step
@@ -115,9 +115,9 @@ def test_stops_if_vehicle_is_in_front():
     # GIVEN a single road with two vehicles
     network = Network(default_speed_limit=10)
     network.add_junction(Road((0, 0), 0, 100, 5))
-    vehicles = VehiclesState()
-    vehicles.add_vehicle(Vehicle(LaneRef("road1", "a"), 0), label="v1")
-    vehicles.add_vehicle(Vehicle(LaneRef("road1", "a"), 4.5), label="v2")
+    vehicles = _VehiclesState()
+    vehicles.add_vehicle(_Vehicle(LaneRef("road1", "a"), 0), label="v1")
+    vehicles.add_vehicle(_Vehicle(LaneRef("road1", "a"), 4.5), label="v2")
 
     # WHEN I step
     stepper = Stepper(network)
@@ -140,9 +140,9 @@ def test_stops_if_vehicles_are_on_top():
 
     network = Network(default_speed_limit=10)
     network.add_junction(Road((0, 0), 0, 100, 5))
-    vehicles = VehiclesState()
-    vehicles.add_vehicle(Vehicle(LaneRef("road1", "a"), 0), label="v1")
-    vehicles.add_vehicle(Vehicle(LaneRef("road1", "a"), 0), label="v2")
+    vehicles = _VehiclesState()
+    vehicles.add_vehicle(_Vehicle(LaneRef("road1", "a"), 0), label="v1")
+    vehicles.add_vehicle(_Vehicle(LaneRef("road1", "a"), 0), label="v2")
 
     # WHEN I step
     stepper = Stepper(network)

@@ -3,7 +3,7 @@ import math
 import pytest
 from junctions.network import LaneRef, Network
 from junctions.priority_wait import priority_wait
-from junctions.state.vehicles import Vehicle, VehiclesState
+from junctions.state.vehicles import _Vehicle, _VehiclesState
 from junctions.types import Road, Tee
 
 
@@ -35,7 +35,7 @@ def test_no_wait_flags_for_no_vehicles():
     network = simple_t_junction_network()
 
     # and no vehicles
-    vehicles = VehiclesState()
+    vehicles = _VehiclesState()
 
     # WHEN i calculate wait flags
     wait_flags = priority_wait(network, vehicles)
@@ -50,8 +50,8 @@ def test_wait_on_t_junction():
     network = simple_t_junction_network()
 
     # AND vehicle on the main road of the t-junction
-    vehicles = VehiclesState()
-    vehicles.add_vehicle(Vehicle(LaneRef("tee", "a"), 1))
+    vehicles = _VehiclesState()
+    vehicles.add_vehicle(_Vehicle(LaneRef("tee", "a"), 1))
 
     # WHEN I calculate wait flags
     wait_flags = priority_wait(network, vehicles)
@@ -70,9 +70,9 @@ def test_two_vehicles_on_t_junction():
     network = simple_t_junction_network()
 
     # AND two vehicles turning left
-    vehicles = VehiclesState()
-    vehicles.add_vehicle(Vehicle(LaneRef("tee", "f"), 1))
-    vehicles.add_vehicle(Vehicle(LaneRef("tee", "f"), 2))
+    vehicles = _VehiclesState()
+    vehicles.add_vehicle(_Vehicle(LaneRef("tee", "f"), 1))
+    vehicles.add_vehicle(_Vehicle(LaneRef("tee", "f"), 2))
 
     # WHEN I calculate wait flags
     wait_flags = priority_wait(network, vehicles)
@@ -100,9 +100,9 @@ def test_vehicle_on_feeder_lane():
     # it is within the large turn clear time, but not the small turn clear time
     # note the main road goes twice the speed of the junction, so need twice
     # the runway to avoid collision
-    vehicles = VehiclesState()
+    vehicles = _VehiclesState()
     vehicles.add_vehicle(
-        Vehicle(LaneRef("main_road_1", "a"), position=100 - large_turn_length * 2 + 1)
+        _Vehicle(LaneRef("main_road_1", "a"), position=100 - large_turn_length * 2 + 1)
     )
 
     # WHEN i calculate the wait flags
@@ -117,9 +117,9 @@ def test_vehicle_on_feeder_lane():
     assert not wait_flags[LaneRef("tee", "c")]
 
     # Same thing, but with vehicle a bit closer, small turn also waits
-    vehicles = VehiclesState()
+    vehicles = _VehiclesState()
     vehicles.add_vehicle(
-        Vehicle(LaneRef("main_road_1", "a"), position=100 - small_turn_length * 2 + 1)
+        _Vehicle(LaneRef("main_road_1", "a"), position=100 - small_turn_length * 2 + 1)
     )
 
     # WHEN i calculate the wait flags
@@ -134,9 +134,9 @@ def test_vehicle_on_feeder_lane():
     assert not wait_flags[LaneRef("tee", "c")]
 
     # Feeder vehicle further away, lanes not blocked
-    vehicles = VehiclesState()
+    vehicles = _VehiclesState()
     vehicles.add_vehicle(
-        Vehicle(LaneRef("main_road_1", "a"), position=100 - large_turn_length * 2 - 1)
+        _Vehicle(LaneRef("main_road_1", "a"), position=100 - large_turn_length * 2 - 1)
     )
 
     # WHEN i calculate the wait flags

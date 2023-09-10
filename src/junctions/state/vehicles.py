@@ -7,16 +7,16 @@ from junctions.network import LaneRef
 
 
 @dataclass(frozen=True)
-class Vehicle:
+class _Vehicle:
     lane_ref: LaneRef
     position: float
 
 
-class VehiclesState:
+class _VehiclesState:
     """State object for vehicles."""
 
     def __init__(self):
-        self._vehicles: dict[str, Vehicle] = {}
+        self._vehicles: dict[str, _Vehicle] = {}
 
     def _make_vehicle_label(self, label: str | None) -> str:
         if label is None:
@@ -40,12 +40,12 @@ class VehiclesState:
     def vehicle_labels(self) -> Iterable[str]:
         return self._vehicles.keys()
 
-    def vehicle(self, label: str) -> Vehicle:
+    def vehicle(self, label: str) -> _Vehicle:
         return self._vehicles[label]
 
-    def add_vehicle(self, vehicle: Vehicle, label: str | None = None) -> None:
+    def add_vehicle(self, vehicle: _Vehicle, label: str | None = None) -> None:
         label = self._make_vehicle_label(label)
         self._vehicles[label] = vehicle
 
-    def items(self) -> Iterable[tuple[str, Vehicle]]:
+    def items(self) -> Iterable[tuple[str, _Vehicle]]:
         return self._vehicles.items()

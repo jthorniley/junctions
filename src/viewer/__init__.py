@@ -3,7 +3,7 @@ import random
 from time import time
 
 from junctions.network import LaneRef, Network
-from junctions.state.vehicles import Vehicle, VehiclesState
+from junctions.state.vehicles import _Vehicle, _VehiclesState
 from junctions.stepper import Stepper
 from junctions.types import Road, Tee
 from pyglet import app, window
@@ -56,7 +56,7 @@ def run():
     win.view = Mat4.from_scale(Vec3(2, 2, 1))
 
     t = time()
-    vehicles_state = VehiclesState()
+    vehicles_state = _VehiclesState()
     last_new_vehicle_time = t
 
     @win.event
@@ -76,7 +76,7 @@ def run():
                 LaneRef("road3", "b"),
             )
             where = random.choice(choices)
-            vehicles_state.add_vehicle(Vehicle(where, 0.0))
+            vehicles_state.add_vehicle(_Vehicle(where, 0.0))
             last_new_vehicle_time = t
 
         vehicles_state = stepper.step(dt, vehicles_state)

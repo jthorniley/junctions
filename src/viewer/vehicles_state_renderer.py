@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Sequence
 
 import pyglet
 from junctions.state.vehicles import (
-    Vehicle,
-    VehiclesState,
+    _Vehicle,
+    _VehiclesState,
 )
 from pyglet.math import Vec2
 
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 def _vehicle_shapes(
-    vehicle: Vehicle, network: Network, batch: pyglet.graphics.Batch
+    vehicle: _Vehicle, network: Network, batch: pyglet.graphics.Batch
 ) -> Sequence[pyglet.shapes.ShapeBase]:
     lane = network.lane(vehicle.lane_ref)
     pos = lane.interpolate(vehicle.position)
@@ -39,7 +39,7 @@ def _vehicle_shapes(
 
 
 class VehiclesStateRenderer:
-    def __init__(self, network: Network, vehicles_state: VehiclesState):
+    def __init__(self, network: Network, vehicles_state: _VehiclesState):
         self._network = network
         self._vehicles: dict[str, Sequence[pyglet.shapes.ShapeBase]] = {}
         self._batch: pyglet.graphics.Batch = pyglet.graphics.Batch()
@@ -50,5 +50,5 @@ class VehiclesStateRenderer:
     def draw(self):
         self._batch.draw()
 
-    def _add_vehicle(self, label: str, vehicle: Vehicle):
+    def _add_vehicle(self, label: str, vehicle: _Vehicle):
         self._vehicles[label] = _vehicle_shapes(vehicle, self._network, self._batch)
