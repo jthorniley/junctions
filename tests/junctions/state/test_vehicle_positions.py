@@ -1,3 +1,5 @@
+import uuid
+
 import numpy as np
 import pytest
 from factory.random import randgen
@@ -39,6 +41,18 @@ def test_add_vehicle():
 
     assert_array_equal(vehicle_positions.ids_by_lane[road_a], np.array([v2, v1, v3]))
     assert_array_equal(vehicle_positions.ids_by_lane[road_b], np.array([v4]))
+
+    # Can also recall by ID
+    assert vehicle_positions[v1] == {"lane_ref": road_a, "position": pytest.approx(2.0)}
+    assert vehicle_positions[v2] == {"lane_ref": road_a, "position": pytest.approx(1.0)}
+    assert vehicle_positions[v3] == {"lane_ref": road_a, "position": pytest.approx(3.0)}
+    assert vehicle_positions[v4] == {"lane_ref": road_b, "position": pytest.approx(0.5)}
+
+
+def test_invalid_lookup_id():
+    vehicle_positions = VehiclePositions()
+    with pytest.raises(KeyError):
+        vehicle_positions[uuid.uuid4()]
 
 
 @pytest.mark.parametrize("_fuzz", range(20))
