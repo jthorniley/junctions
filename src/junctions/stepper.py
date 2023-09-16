@@ -24,10 +24,18 @@ class Stepper:
     """Utility for stepping the simulation in time"""
 
     def __init__(self, network: Network, vehicle_positions: VehiclePositions) -> None:
-        ...
+        self._network = network
+        self._vehicle_positions = vehicle_positions
 
     def step(self, dt: float) -> None:
-        ...
+        """Perform a step with time interval dt"""
+
+        for lane_ref in self._network.all_lanes():
+            speed_limit = self._network.speed_limit(lane_ref)
+
+            movement = dt * speed_limit
+
+            self._vehicle_positions.by_lane[lane_ref][:] += movement
 
     # def __init__(self, network: Network):
     #     self._network = network
