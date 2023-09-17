@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import uuid
 from collections import defaultdict
+from copy import deepcopy
 from typing import Mapping, MutableMapping, TypedDict
 
 import numpy as np
@@ -35,6 +38,12 @@ class VehiclePositions:
         )
         # Lookup for which lane a vehicle is currently on
         self._vehicle_storage_map: MutableMapping[uuid.UUID, tuple[LaneRef, int]] = {}
+
+    def copy(self) -> VehiclePositions:
+        clone = VehiclePositions()
+        clone._storage = deepcopy(self._storage)
+        clone._vehicle_storage_map = deepcopy(self._vehicle_storage_map)
+        return clone
 
     @staticmethod
     def _empty_storage() -> np.ndarray:

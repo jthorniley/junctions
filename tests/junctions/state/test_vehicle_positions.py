@@ -155,3 +155,28 @@ def test_move_to_new_lane():
         "lane_ref": lane_2,
         "position": pytest.approx(3.0),
     }
+
+
+def test_clone():
+    # SET UP: vehicle positions with a vehicle
+    vehicle_positions = VehiclePositions()
+    v = vehicle_positions.create_vehicle(LaneRef("road1", "a"), 1.0)
+
+    # ACT: clone the object, and move on the clone
+    clone_vehicle_positions = vehicle_positions.copy()
+    clone_vehicle_positions.by_lane[LaneRef("road1", "a")][0] += 1
+
+    # ASSERT: the clone reflects the move, the original doesnt
+    assert_almost_equal(clone_vehicle_positions.by_lane[LaneRef("road1", "a")], [2.0])
+    assert_almost_equal(vehicle_positions.by_lane[LaneRef("road1", "a")], [1.0])
+    assert_array_equal(
+        clone_vehicle_positions.ids_by_lane[LaneRef("road1", "a")], np.array([v])
+    )
+    assert_array_equal(
+        vehicle_positions.ids_by_lane[LaneRef("road1", "a")], np.array([v])
+    )
+    assert vehicle_positions[v] == {"lane_ref": LaneRef("road1", "a"), "position": 1.0}
+    assert clone_vehicle_positions[v] == {
+        "lane_ref": LaneRef("road1", "a"),
+        "position": 2.0,
+    }
