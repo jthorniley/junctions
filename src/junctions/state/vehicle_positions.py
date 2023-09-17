@@ -33,6 +33,8 @@ class VehiclePositions:
         self._storage: MutableMapping[LaneRef, np.ndarray] = defaultdict(
             VehiclePositions._empty_storage
         )
+        # Lookup for which lane a vehicle is currently on
+        self._vehicle_storage_map: MutableMapping[uuid.UUID, tuple[LaneRef, int]] = {}
 
     @staticmethod
     def _empty_storage() -> np.ndarray:
@@ -42,19 +44,30 @@ class VehiclePositions:
         storage = self._storage[lane_ref]
 
         new_id = uuid.uuid4()
-        updated = np.concatenate([storage, np.array([(0.0, b"")], dtype=storage.dtype)])
-        greater = np.argwhere(storage["position"] > position).flatten()
+        vehicle_index = np.searchsorted(self.by_lane[lane_ref], position)
 
-        if greater.shape[0] > 0:
-            updated[greater + 1] = updated[greater]
-            updated[greater[0]] = (position, new_id)
+        updated = np.hstack(
+            (
+                storage[:vehicle_index],
+                np.array([(position, new_id)], dtype=[("position", "f4"), ("id", "O")]),
+                storage[vehicle_index:],
+            )
+        )
 
-        else:
-            updated[-1] = (position, new_id)
+        # Bump the indices of all the vehicles after the added one
+        for i, vehicle in enumerate(storage[vehicle_index:]["id"]):
+            self._vehicle_storage_map[vehicle] = (
+                lane_ref,
+                i + 1,
+            )
 
         self._storage[lane_ref] = updated
+        self._vehicle_storage_map[new_id] = (lane_ref, int(vehicle_index))
 
         return new_id
+
+    def switch_lane(self, id: uuid.UUID, lane_ref: LaneRef, position: float) -> None:
+        ...
 
     @property
     def by_lane(self) -> _VehiclePositionsByLane:
@@ -65,8 +78,7 @@ class VehiclePositions:
         return _VehicleIdsByLane(self._storage)
 
     def __getitem__(self, id: uuid.UUID) -> VehiclePosition:
-        for lane_ref, rows in self._storage.items():
-            for row in rows:
-                if row["id"] == id:
-                    return {"lane_ref": lane_ref, "position": row["position"]}
-        raise KeyError()
+        lane_ref, idx = self._vehicle_storage_map[id]
+        return VehiclePosition(
+            {"lane_ref": lane_ref, "position": self.by_lane[lane_ref][idx]}
+        )

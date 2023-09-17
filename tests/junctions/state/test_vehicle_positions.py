@@ -69,3 +69,44 @@ def test_vehicle_position_sort(_fuzz):
     # Assert - the list should be sorted when retrieved
     sorted_values = np.array(sorted(values), dtype=np.float32)
     assert_almost_equal(vehicle_positions.by_lane[LaneRef("a", "a")], sorted_values)
+
+
+def test_move_to_new_lane():
+    # SET UP: 10 vehicles on a single lane
+    vehicle_positions = VehiclePositions()
+
+    lane_1 = LaneRef("road1", "a")
+    lane_2 = LaneRef("road2", "a")
+    vehicles = [vehicle_positions.create_vehicle(lane_1, i) for i in range(10)]
+
+    # ACT: move 3 vehicles to another lane
+    vehicle_positions.switch_lane(vehicles[5], lane_2, position=2)
+    vehicle_positions.switch_lane(vehicles[3], lane_2, position=0)
+    vehicle_positions.switch_lane(vehicles[6], lane_2, position=3)
+
+    # ASSERT:
+    # non-switched vehicles have not changed...
+    assert_almost_equal(
+        vehicle_positions.by_lane[lane_1], [0.0, 1.0, 3.0, 6.0, 7.0, 8.0, 9.0]
+    )
+    assert_array_equal(
+        vehicle_positions.ids_by_lane[lane_1],
+        np.array(
+            [
+                vehicles[0],
+                vehicles[1],
+                vehicles[2],
+                vehicles[4],
+                vehicles[7],
+                vehicles[8],
+                vehicles[9],
+            ]
+        ),
+    )
+
+    # Switched vehicles are on new lane, in position order
+    assert_almost_equal(vehicle_positions.by_lane[lane_2], [2.0, 4.0, 5.0])
+    assert_array_equal(
+        vehicle_positions.ids_by_lane[lane_2],
+        np.array([vehicles[3], vehicles[5], vehicles[6]]),
+    )
