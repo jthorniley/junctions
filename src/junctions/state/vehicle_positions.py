@@ -58,7 +58,7 @@ class VehiclePositions:
         for i, vehicle in enumerate(storage[vehicle_index:]["id"]):
             self._vehicle_storage_map[vehicle] = (
                 lane_ref,
-                i + 1,
+                int(vehicle_index) + i + 1,
             )
 
         self._storage[lane_ref] = updated
@@ -67,7 +67,40 @@ class VehiclePositions:
         return new_id
 
     def switch_lane(self, id: uuid.UUID, lane_ref: LaneRef, position: float) -> None:
-        ...
+        old_lane_ref, old_index = self._vehicle_storage_map[id]
+
+        # Update the old lane
+        old_storage = self._storage[old_lane_ref]
+        for i, vehicle in enumerate(old_storage[old_index + 1 :]["id"]):
+            self._vehicle_storage_map[vehicle] = (
+                old_lane_ref,
+                old_index + i,
+            )
+        old_storage = np.hstack((old_storage[:old_index], old_storage[old_index + 1 :]))
+        self._storage[old_lane_ref] = old_storage
+
+        # Add to new lane
+        new_vehicle_index = int(np.searchsorted(self.by_lane[lane_ref], position))
+        new_storage = self._storage[lane_ref]
+
+        new_storage = np.hstack(
+            (
+                new_storage[:new_vehicle_index],
+                np.array([(position, id)], dtype=[("position", "f4"), ("id", "O")]),
+                new_storage[new_vehicle_index:],
+            )
+        )
+
+        # Bump the indices of all the vehicles after the added one
+        for i, vehicle in enumerate(new_storage[new_vehicle_index + 1 :]["id"]):
+            self._vehicle_storage_map[vehicle] = (
+                lane_ref,
+                new_vehicle_index + i + 1,
+            )
+
+        self._vehicle_storage_map[id] = (lane_ref, new_vehicle_index)
+
+        self._storage[lane_ref] = new_storage
 
     @property
     def by_lane(self) -> _VehiclePositionsByLane:
