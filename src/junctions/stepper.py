@@ -5,6 +5,8 @@ from collections import defaultdict
 from operator import itemgetter
 from typing import TYPE_CHECKING, Final
 
+import numpy as np
+
 from junctions.network import LaneRef
 from junctions.priority_wait import priority_wait
 from junctions.state.vehicle_positions import VehiclePositions
@@ -27,6 +29,9 @@ class Stepper:
         self._network = network
         self._vehicle_positions = vehicle_positions
 
+    def _next_lane_ref(self, lane_ref: LaneRef) -> LaneRef:
+        ...
+
     def step(self, dt: float) -> None:
         """Perform a step with time interval dt"""
 
@@ -34,6 +39,17 @@ class Stepper:
             speed_limit = self._network.speed_limit(lane_ref)
 
             movement = dt * speed_limit
+
+            position = self._vehicle_positions.by_lane[lane_ref] + movement
+
+            # Index where the vehicles are past the lane end
+            lane_end_index = np.searchsorted(
+                position, self._network.lane(lane_ref).length
+            )
+
+            for vehicle_index in range(lane_end_index, position.shape[0]):
+                # Pick lane that vehicle leaving this lane should move to
+                next_lane_ref = self._next_lane_ref(lane_ref)
 
             self._vehicle_positions.by_lane[lane_ref][:] += movement
 
