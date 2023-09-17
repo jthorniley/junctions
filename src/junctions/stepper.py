@@ -29,8 +29,13 @@ class Stepper:
         self._network = network
         self._vehicle_positions = vehicle_positions
 
-    def _next_lane_ref(self, lane_ref: LaneRef) -> LaneRef:
-        ...
+    def _next_lane_ref(self, lane_ref: LaneRef) -> LaneRef | None:
+        next_lane_choices = self._network.connected_lanes(lane_ref)
+
+        if next_lane_choices:
+            next_lane_ref = random.choice(next_lane_choices)
+            return next_lane_ref
+        return None
 
     def step(self, dt: float) -> None:
         """Perform a step with time interval dt"""
@@ -42,16 +47,38 @@ class Stepper:
 
             position = self._vehicle_positions.by_lane[lane_ref] + movement
 
+            self._vehicle_positions.by_lane[lane_ref][:] += movement
+
+        next_vehicle_positions = self._vehicle_positions.copy()
+
+        for lane_ref in self._network.all_lanes():
+            position = self._vehicle_positions.by_lane[lane_ref]
+            id = self._vehicle_positions.ids_by_lane[lane_ref]
+            lane_length = self._network.lane(lane_ref).length
             # Index where the vehicles are past the lane end
-            lane_end_index = np.searchsorted(
-                position, self._network.lane(lane_ref).length
-            )
+            lane_end_index = np.searchsorted(position, lane_length)
 
             for vehicle_index in range(lane_end_index, position.shape[0]):
                 # Pick lane that vehicle leaving this lane should move to
                 next_lane_ref = self._next_lane_ref(lane_ref)
 
-            self._vehicle_positions.by_lane[lane_ref][:] += movement
+                if next_lane_ref:
+                    speed_limit = self._network.speed_limit(lane_ref)
+                    excess = position[vehicle_index] - lane_length
+                    t_excess = excess / speed_limit
+
+                    next_lane_speed_limit = self._network.speed_limit(next_lane_ref)
+
+                    next_vehicle_positions.switch_lane(
+                        id[vehicle_index],
+                        next_lane_ref,
+                        t_excess * next_lane_speed_limit,
+                    )
+
+        self._vehicle_positions._storage = next_vehicle_positions._storage
+        self._vehicle_positions._vehicle_storage_map = (
+            next_vehicle_positions._vehicle_storage_map
+        )
 
     # def __init__(self, network: Network):
     #     self._network = network
