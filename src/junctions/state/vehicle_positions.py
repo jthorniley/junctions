@@ -188,7 +188,7 @@ class VehiclePositions:
         return VehicleIdsByLane(self._storage)
 
     def __getitem__(self, id: uuid.UUID) -> VehiclePosition:
-        """For retricing the vehicle lane/position by vehicle ID"""
+        """For retrieving the vehicle lane/position by vehicle ID"""
         lane_ref, idx = self._vehicle_storage_map[id]
         return VehiclePosition(
             {"lane_ref": lane_ref, "position": self.positions_by_lane[lane_ref][idx]}
