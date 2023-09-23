@@ -3,6 +3,7 @@ import random
 from time import time
 
 from junctions.network import LaneRef, Network
+from junctions.state.vehicle_positions import VehiclePositions
 from junctions.state.vehicles import _Vehicle, _VehiclesState
 from junctions.stepper import Stepper
 from junctions.types import Road, Tee
@@ -50,18 +51,18 @@ def run():
     network.connect_lanes(LaneRef("tee1", "e"), LaneRef("road2", "a"))
     network.connect_lanes(LaneRef("tee1", "f"), LaneRef("road3", "a"))
 
-    stepper = Stepper(network)
+    vehicle_positions = VehiclePositions()
+    stepper = Stepper(network, vehicle_positions)
 
     # Double the scale
     win.view = Mat4.from_scale(Vec3(2, 2, 1))
 
     t = time()
-    vehicles_state = _VehiclesState()
     last_new_vehicle_time = t
 
     @win.event
     def on_draw():
-        nonlocal vehicles_state, t, last_new_vehicle_time
+        nonlocal vehicle_positions, t, last_new_vehicle_time
         win.clear()
 
         dt = time() - t
@@ -76,13 +77,13 @@ def run():
                 LaneRef("road3", "b"),
             )
             where = random.choice(choices)
-            vehicles_state.add_vehicle(_Vehicle(where, 0.0))
+            vehicle_positions.create_vehicle(where, 0.0)
             last_new_vehicle_time = t
 
-        vehicles_state = stepper.step(dt, vehicles_state)
+        stepper.step(dt)
 
-        network_renderer = NetworkRenderer(network, stepper.wait_flags)
-        vehicles_state_renderer = VehiclesStateRenderer(network, vehicles_state)
+        network_renderer = NetworkRenderer(network, None)
+        vehicles_state_renderer = VehiclesStateRenderer(network, vehicle_positions)
         network_renderer.draw()
         vehicles_state_renderer.draw()
 
