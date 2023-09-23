@@ -4,7 +4,6 @@ from time import time
 
 from junctions.network import LaneRef, Network
 from junctions.state.vehicle_positions import VehiclePositions
-from junctions.state.vehicles import _Vehicle, _VehiclesState
 from junctions.stepper import Stepper
 from junctions.types import Road, Tee
 from pyglet import app, window
@@ -82,7 +81,7 @@ def run():
 
         stepper.step(dt)
 
-        network_renderer = NetworkRenderer(network, None)
+        network_renderer = NetworkRenderer(network, stepper.wait_flags)
         vehicles_state_renderer = VehiclesStateRenderer(network, vehicle_positions)
         network_renderer.draw()
         vehicles_state_renderer.draw()

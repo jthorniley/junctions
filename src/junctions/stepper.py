@@ -28,6 +28,11 @@ class Stepper:
     def __init__(self, network: Network, vehicle_positions: VehiclePositions) -> None:
         self._network = network
         self._vehicle_positions = vehicle_positions
+        self._wait_flags: WaitFlags | None = None
+
+    @property
+    def wait_flags(self) -> WaitFlags | None:
+        return self._wait_flags
 
     def _next_lane_ref(self, lane_ref: LaneRef) -> LaneRef | None:
         next_lane_choices = self._network.connected_lanes(lane_ref)
@@ -39,6 +44,8 @@ class Stepper:
 
     def step(self, dt: float) -> None:
         """Perform a step with time interval dt"""
+
+        self._wait_flags = priority_wait(self._network, self._vehicle_positions)
 
         for lane_ref in self._network.all_lanes():
             speed_limit = self._network.speed_limit(lane_ref)
