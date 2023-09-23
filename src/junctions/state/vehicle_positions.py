@@ -32,14 +32,32 @@ class VehicleIdsByLane:
 
 
 class VehiclePositions:
+    """Stores the current state of vehicles in the simulation.
+
+    Each vehicle is on a lane (referenced by a LaneRef object) and has a position
+    from the start of that lane.
+    """
+
     def __init__(self):
+        # Internally, there are two storages - this one is indexed by LaneRef,
+        # returning a numpy structured array containing ids and positions for
+        # all the vehicles on that lane. See _empty_storage() for the code
+        # that creates the empty structured array.
+        #
+        # Importantly, the structured array is always sorted by ascending order
+        # of position, which makes various aspects of iterating through the
+        # vehicles (for solving the sim) more efficient.
         self._storage: MutableMapping[LaneRef, np.ndarray] = defaultdict(
             VehiclePositions._empty_storage
         )
-        # Lookup for which lane a vehicle is currently on
+        # Second, we maintain an index by vehicle ID, which is useful for quickly
+        # finding where a vehicle is when the ID is already known. (This is
+        # generally less useful in simulation stepping, where what we need to
+        # do is iterate all vehicles on all lanes)
         self._vehicle_storage_map: MutableMapping[uuid.UUID, tuple[LaneRef, int]] = {}
 
     def copy(self) -> VehiclePositions:
+        # make a deep clone of the storage data and return it
         clone = VehiclePositions()
         clone._storage = deepcopy(self._storage)
         clone._vehicle_storage_map = deepcopy(self._vehicle_storage_map)
@@ -50,9 +68,12 @@ class VehiclePositions:
         return np.array([], dtype=[("position", "f4"), ("id", "O")])
 
     def create_vehicle(self, lane_ref: LaneRef, position: float) -> uuid.UUID:
+        # insert a new vehicle
         storage = self._storage[lane_ref]
 
         new_id = uuid.uuid4()
+
+        # we have to be careful to insert it at the right place...
         vehicle_index = np.searchsorted(self.positions_by_lane[lane_ref], position)
 
         updated = np.hstack(
@@ -63,19 +84,24 @@ class VehiclePositions:
             )
         )
 
-        # Bump the indices of all the vehicles after the added one
+        # and since the vehicle could have been inserted in the middle, we have
+        # to make sure we correct the indices of the by-id lookup to reflect that
         for i, vehicle in enumerate(storage[vehicle_index:]["id"]):
             self._vehicle_storage_map[vehicle] = (
                 lane_ref,
                 int(vehicle_index) + i + 1,
             )
 
+        # now set the storage data
         self._storage[lane_ref] = updated
+
+        # and insert the reverse lookup into the index
         self._vehicle_storage_map[new_id] = (lane_ref, int(vehicle_index))
 
         return new_id
 
     def switch_lane(self, id: uuid.UUID, lane_ref: LaneRef, position: float) -> None:
+        # move vehicle from wherever it currently is to a new lane ref/position
         old_lane_ref, old_index = self._vehicle_storage_map[id]
 
         # Update the old lane
@@ -130,17 +156,44 @@ class VehiclePositions:
 
     @property
     def positions_by_lane(self) -> VehiclePositionsByLane:
+        """Use this to access all the vehicle positions on a given lane.
+
+        For example:
+
+            >>> positions.positions_by_lane[lane_ref]
+
+        This returns the positions of the vehicles on the specified
+        lane _in ascending order_. It is important if the vehicle
+        positions are modified that the order is not changed. To change
+        the position of a vehicle while guaranteeing that the ordering
+        is not broken use switch_lane().
+        """
         return VehiclePositionsByLane(self._storage)
 
     @property
     def ids_by_lane(self) -> VehicleIdsByLane:
+        """Return the IDs of the vehicles on a given lane.
+
+        For example:
+
+            >>> positions.ids_by_lane[lane_ref]
+
+        The resulting numpy array of IDs (each of which is a `uuid.UUID`)
+        is the vehicle IDs on the specified lane.
+
+        The result is a view onto internal storage used by this
+        class. DO NOT change the elements of the returned array as
+        the storage state will become inconsistent.
+        """
         return VehicleIdsByLane(self._storage)
 
     def __getitem__(self, id: uuid.UUID) -> VehiclePosition:
+        """For retricing the vehicle lane/position by vehicle ID"""
         lane_ref, idx = self._vehicle_storage_map[id]
         return VehiclePosition(
             {"lane_ref": lane_ref, "position": self.positions_by_lane[lane_ref][idx]}
         )
 
     def group_by_lane(self) -> Iterable[tuple[LaneRef, np.ndarray]]:
+        """Iterate all the vehicles in the system, grouped by lane."""
         return self._storage.items()
