@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import random
 import uuid
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
@@ -17,6 +18,18 @@ if TYPE_CHECKING:
 VEHICLE_SEPARATION_LIMIT: Final = 5
 
 
+@dataclass
+class LaneChange:
+    id: uuid.UUID
+    lane_ref: LaneRef
+    position: float
+
+
+@dataclass
+class RemoveVehicle:
+    id: uuid.UUID
+
+
 class Stepper:
     """Utility for stepping the simulation in time"""
 
@@ -30,7 +43,74 @@ class Stepper:
     def wait_flags(self) -> WaitFlags | None:
         return self._wait_flags
 
-    def _next_lane_ref(
+    def _move_vehicles(self, dt: float):
+        """Move all the vehicles according to the speed limit of the lane
+        they are on. Stop if they are blocked by a vehicle in front or a wait flag.
+        """
+        for lane_ref, vehicle_data in self._vehicle_positions.group_by_lane():
+            speed_limit = self._network.speed_limit(lane_ref)
+
+            position = vehicle_data["position"]
+            movement = np.ones_like(position) * dt * speed_limit
+
+            gap = np.diff(position)
+
+            movement[:-1][gap < VEHICLE_SEPARATION_LIMIT] = 0
+
+            position[:] += movement
+
+    def _calculate_lane_changes(self) -> list[LaneChange | RemoveVehicle]:
+        """For vehicles that have moved past the end of their current lane,
+        decide where to move them. The options are:
+
+        * Choose a new lane at random
+        * If there is no follow-on lane, remove the vehicle from the sim
+        * If the next lane is clear (no wait flag) move onto it
+        * If the next lane has a wait flag, stop at the end of current lane
+
+        """
+        changes = []
+
+        for lane_ref, vehicle_data in self._vehicle_positions.group_by_lane():
+            id = vehicle_data["id"]
+            position = vehicle_data["position"]
+            lane_length = self._network.lane(lane_ref).length
+
+            # Index where the vehicles are past the lane end
+            lane_end_index = np.searchsorted(position, lane_length)
+
+            for vehicle_index in range(lane_end_index, position.shape[0]):
+                vehicle_id = id[vehicle_index]
+
+                # Pick lane that vehicle leaving this lane should move to
+                next_lane_ref = self._choose_new_lane(lane_ref, vehicle_id)
+
+                if next_lane_ref:
+                    if self._wait_flags and self._wait_flags[next_lane_ref]:
+                        # Vehicle is stuck on the end of its current lane, no switch
+                        changes.append(LaneChange(vehicle_id, lane_ref, lane_length))
+                    else:
+                        # move vehicle to next lane, clear stored lane choice
+                        del self._next_lane_choice[vehicle_id]
+                        speed_limit = self._network.speed_limit(lane_ref)
+                        excess = position[vehicle_index] - lane_length
+                        t_excess = excess / speed_limit
+
+                        next_lane_speed_limit = self._network.speed_limit(next_lane_ref)
+
+                        changes.append(
+                            LaneChange(
+                                vehicle_id,
+                                next_lane_ref,
+                                t_excess * next_lane_speed_limit,
+                            )
+                        )
+                else:
+                    changes.append(RemoveVehicle(vehicle_id))
+
+        return changes
+
+    def _choose_new_lane(
         self, lane_ref: LaneRef, vehicle_id: uuid.UUID
     ) -> LaneRef | None:
         if vehicle_id in self._next_lane_choice:
@@ -49,62 +129,13 @@ class Stepper:
 
         self._wait_flags = priority_wait(self._network, self._vehicle_positions)
 
-        for lane_ref, vehicle_data in self._vehicle_positions.group_by_lane():
-            speed_limit = self._network.speed_limit(lane_ref)
-
-            position = vehicle_data["position"]
-            movement = np.ones_like(position) * dt * speed_limit
-
-            gap = np.diff(position)
-
-            movement[:-1][gap < VEHICLE_SEPARATION_LIMIT] = 0
-
-            position[:] += movement
+        self._move_vehicles(dt)
 
         # lane switches needed
-        switch_lanes: list[tuple[uuid.UUID, LaneRef, float]] = []
-        # vehicles to remove from sim
-        remove: list[uuid.UUID] = []
+        for change in self._calculate_lane_changes():
+            match change:
+                case LaneChange(vehicle_id, lane_ref, position):
+                    self._vehicle_positions.switch_lane(vehicle_id, lane_ref, position)
 
-        for lane_ref, vehicle_data in self._vehicle_positions.group_by_lane():
-            id = vehicle_data["id"]
-            position = vehicle_data["position"]
-            lane_length = self._network.lane(lane_ref).length
-
-            # Index where the vehicles are past the lane end
-            lane_end_index = np.searchsorted(position, lane_length)
-
-            for vehicle_index in range(lane_end_index, position.shape[0]):
-                vehicle_id = id[vehicle_index]
-
-                # Pick lane that vehicle leaving this lane should move to
-                next_lane_ref = self._next_lane_ref(lane_ref, vehicle_id)
-
-                if next_lane_ref:
-                    if self._wait_flags[next_lane_ref]:
-                        # Vehicle is stuck on the end of its current lane, no switch
-                        switch_lanes.append((vehicle_id, lane_ref, lane_length))
-                    else:
-                        # move vehicle to next lane, clear stored lane choice
-                        del self._next_lane_choice[vehicle_id]
-                        speed_limit = self._network.speed_limit(lane_ref)
-                        excess = position[vehicle_index] - lane_length
-                        t_excess = excess / speed_limit
-
-                        next_lane_speed_limit = self._network.speed_limit(next_lane_ref)
-
-                        switch_lanes.append(
-                            (
-                                vehicle_id,
-                                next_lane_ref,
-                                t_excess * next_lane_speed_limit,
-                            )
-                        )
-                else:
-                    remove.append(vehicle_id)
-
-        for switch_lane in switch_lanes:
-            self._vehicle_positions.switch_lane(*switch_lane)
-
-        for vehicle_id in remove:
-            self._vehicle_positions.remove(vehicle_id)
+                case RemoveVehicle(vehicle_id):
+                    self._vehicle_positions.remove(vehicle_id)
