@@ -15,7 +15,7 @@ class VehiclePosition(TypedDict):
     position: float
 
 
-class _VehiclePositionsByLane:
+class VehiclePositionsByLane:
     def __init__(self, storage: Mapping[LaneRef, np.ndarray]) -> None:
         self._storage = storage
 
@@ -23,7 +23,7 @@ class _VehiclePositionsByLane:
         return self._storage[lane_ref]["position"]
 
 
-class _VehicleIdsByLane:
+class VehicleIdsByLane:
     def __init__(self, storage: Mapping[LaneRef, np.ndarray]) -> None:
         self._storage = storage
 
@@ -129,12 +129,12 @@ class VehiclePositions:
         )
 
     @property
-    def positions_by_lane(self) -> _VehiclePositionsByLane:
-        return _VehiclePositionsByLane(self._storage)
+    def positions_by_lane(self) -> VehiclePositionsByLane:
+        return VehiclePositionsByLane(self._storage)
 
     @property
-    def ids_by_lane(self) -> _VehicleIdsByLane:
-        return _VehicleIdsByLane(self._storage)
+    def ids_by_lane(self) -> VehicleIdsByLane:
+        return VehicleIdsByLane(self._storage)
 
     def __getitem__(self, id: uuid.UUID) -> VehiclePosition:
         lane_ref, idx = self._vehicle_storage_map[id]
