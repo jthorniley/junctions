@@ -43,11 +43,14 @@ class Stepper:
         for lane_ref in self._network.all_lanes():
             speed_limit = self._network.speed_limit(lane_ref)
 
-            movement = dt * speed_limit
+            position = self._vehicle_positions.by_lane[lane_ref]
+            movement = np.ones_like(position) * dt * speed_limit
 
-            position = self._vehicle_positions.by_lane[lane_ref] + movement
+            gap = np.diff(position)
 
-            self._vehicle_positions.by_lane[lane_ref][:] += movement
+            movement[:-1][gap < VEHICLE_SEPARATION_LIMIT] = 0
+
+            position[:] += movement
 
         next_vehicle_positions = self._vehicle_positions.copy()
 

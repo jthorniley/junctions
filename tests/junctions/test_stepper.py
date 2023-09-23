@@ -146,5 +146,5 @@ def test_stops_if_vehicles_are_on_top():
     stepper.step(0.1)
 
     # THEN only the one in front moves
-    assert vehicles[v1]["position"] == pytest.approx(0.0)
-    assert vehicles[v2]["position"] == pytest.approx(1.0)
+    assert vehicles[v2]["position"] == pytest.approx(0.0)
+    assert vehicles[v1]["position"] == pytest.approx(1.0)
