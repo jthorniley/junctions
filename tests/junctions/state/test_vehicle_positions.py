@@ -273,3 +273,26 @@ def test_remove_vehicle_from_start():
         "lane_ref": LaneRef("road1", "a"),
         "position": pytest.approx(4.0),
     }
+
+
+def test_iterate_all_vehicles():
+    # SET UP: some vehicles on multiple lanes
+    vehicle_positions = VehiclePositions()
+    v1 = vehicle_positions.create_vehicle(LaneRef("road1", "a"), 0.0)
+    v2 = vehicle_positions.create_vehicle(LaneRef("road1", "a"), 1.0)
+    v3 = vehicle_positions.create_vehicle(LaneRef("road2", "a"), 2.0)
+    v4 = vehicle_positions.create_vehicle(LaneRef("road2", "a"), 3.0)
+
+    # ACT: iterate
+    all_lanes = []
+    all_vehicles = []
+    for lane, vehicles in vehicle_positions.group_by_lane():
+        all_lanes.append(lane)
+        all_vehicles.append(vehicles)
+
+    # ASSERT: all the expected vehicles are in the set
+    assert all_lanes == [LaneRef("road1", "a"), LaneRef("road2", "a")]
+    assert_array_equal(all_vehicles[0]["id"], np.array([v1, v2]))
+    assert_array_equal(all_vehicles[1]["id"], np.array([v3, v4]))
+    assert_almost_equal(all_vehicles[0]["position"], np.array([0.0, 1.0]))
+    assert_almost_equal(all_vehicles[1]["position"], np.array([2.0, 3.0]))

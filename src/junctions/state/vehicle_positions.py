@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from collections import defaultdict
 from copy import deepcopy
-from typing import Mapping, MutableMapping, TypedDict
+from typing import Iterable, Mapping, MutableMapping, TypedDict
 
 import numpy as np
 
@@ -139,3 +139,6 @@ class VehiclePositions:
         return VehiclePosition(
             {"lane_ref": lane_ref, "position": self.by_lane[lane_ref][idx]}
         )
+
+    def group_by_lane(self) -> Iterable[tuple[LaneRef, np.ndarray]]:
+        return self._storage.items()
