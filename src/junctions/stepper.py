@@ -49,10 +49,10 @@ class Stepper:
 
         self._wait_flags = priority_wait(self._network, self._vehicle_positions)
 
-        for lane_ref in self._network.all_lanes():
+        for lane_ref, vehicle_data in self._vehicle_positions.group_by_lane():
             speed_limit = self._network.speed_limit(lane_ref)
 
-            position = self._vehicle_positions.by_lane[lane_ref]
+            position = vehicle_data["position"]
             movement = np.ones_like(position) * dt * speed_limit
 
             gap = np.diff(position)
