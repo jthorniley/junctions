@@ -10,7 +10,7 @@ from pyglet import app, window
 from pyglet.math import Mat4, Vec3
 
 from viewer.network_renderer import NetworkRenderer
-from viewer.vehicles_state_renderer import VehiclesStateRenderer
+from viewer.vehicle_positions_renderer import VehiclePositionsRenderer
 
 
 def run():
@@ -80,7 +80,7 @@ def run():
         stepper.step(dt * 2)
 
         network_renderer = NetworkRenderer(network, stepper.wait_flags)
-        vehicles_state_renderer = VehiclesStateRenderer(network, vehicle_positions)
+        vehicles_state_renderer = VehiclePositionsRenderer(network, vehicle_positions)
         network_renderer.draw()
         vehicles_state_renderer.draw()
 

@@ -13,10 +13,10 @@ if TYPE_CHECKING:
 
 
 def _vehicle_shapes(
-    vehicle: float, lane_ref: LaneRef, network: Network, batch: pyglet.graphics.Batch
+    lane_ref: LaneRef, position: float, network: Network, batch: pyglet.graphics.Batch
 ) -> Sequence[pyglet.shapes.ShapeBase]:
     lane = network.lane(lane_ref)
-    pos = lane.interpolate(vehicle)
+    pos = lane.interpolate(position)
 
     forward = Vec2(0, 1).rotate(-pos.bearing)
     right = Vec2(-1, 0).rotate(-pos.bearing)
@@ -37,22 +37,20 @@ def _vehicle_shapes(
     ]
 
 
-class VehiclesStateRenderer:
+class VehiclePositionsRenderer:
     def __init__(self, network: Network, vehicles_state: VehiclePositions):
         self._network = network
         self._vehicles: dict[str, Sequence[pyglet.shapes.ShapeBase]] = {}
         self._batch: pyglet.graphics.Batch = pyglet.graphics.Batch()
 
-        for lane in network.all_lanes():
-            for id, vehicle in zip(
-                vehicles_state.ids_by_lane[lane], vehicles_state.by_lane[lane]
-            ):
-                self._add_vehicle(id, lane, vehicle)
+        for lane_ref, vehicle_data in vehicles_state.group_by_lane():
+            for row in vehicle_data:
+                self._add_vehicle(lane_ref, row["id"], row["position"])
 
     def draw(self):
         self._batch.draw()
 
-    def _add_vehicle(self, id: uuid.UUID, lane: LaneRef, vehicle: float):
+    def _add_vehicle(self, lane_ref: LaneRef, id: uuid.UUID, position: float):
         self._vehicles[str(id)] = _vehicle_shapes(
-            vehicle, lane, self._network, self._batch
+            lane_ref, position, self._network, self._batch
         )
