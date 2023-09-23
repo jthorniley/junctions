@@ -21,9 +21,9 @@ def _vehicle_shapes(
     forward = Vec2(0, 1).rotate(-pos.bearing)
     right = Vec2(-1, 0).rotate(-pos.bearing)
     a = pos.point + right * 0.5
-    b = a - forward * 3
-    c = b + right * 1.5
-    d = c + forward * 3
+    b = a - forward * 4
+    c = b + right * 2
+    d = c + forward * 4
     return [
         pyglet.shapes.Polygon(
             (a[0], a[1]),
@@ -31,7 +31,7 @@ def _vehicle_shapes(
             (c[0], c[1]),
             (d[0], d[1]),
             (a[0], a[1]),
-            color=(200, 200, 200, 255),
+            color=(10, 240, 20, 255),
             batch=batch,
         )
     ]

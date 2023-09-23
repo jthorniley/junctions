@@ -57,17 +57,16 @@ def run():
     win.view = Mat4.from_scale(Vec3(2, 2, 1))
 
     t = time()
-    last_new_vehicle_time = t
 
     @win.event
     def on_draw():
-        nonlocal vehicle_positions, t, last_new_vehicle_time
+        nonlocal vehicle_positions, t
         win.clear()
 
         dt = time() - t
         t += dt
 
-        if random.random() < dt / 2 and last_new_vehicle_time < (t - 0.5):
+        if random.random() < dt:
             choices = (
                 LaneRef("road1", "a"),
                 LaneRef("road2", "b"),
@@ -77,7 +76,6 @@ def run():
             )
             where = random.choice(choices)
             vehicle_positions.create_vehicle(where, 0.0)
-            last_new_vehicle_time = t
 
         stepper.step(dt * 2)
 
