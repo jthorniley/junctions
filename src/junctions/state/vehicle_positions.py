@@ -111,6 +111,21 @@ class VehiclePositions:
 
         self._storage[lane_ref] = new_storage
 
+    def remove(self, id: uuid.UUID) -> None:
+        old_lane_ref, old_index = self._vehicle_storage_map[id]
+
+        del self._vehicle_storage_map[id]
+
+        for i, (_, id) in enumerate(self._storage[old_lane_ref][old_index + 1 :]):
+            self._vehicle_storage_map[id] = (old_lane_ref, old_index + i)
+
+        self._storage[old_lane_ref] = np.hstack(
+            (
+                self._storage[old_lane_ref][:old_index],
+                self._storage[old_lane_ref][old_index + 1 :],
+            )
+        )
+
     @property
     def by_lane(self) -> _VehiclePositionsByLane:
         return _VehiclePositionsByLane(self._storage)

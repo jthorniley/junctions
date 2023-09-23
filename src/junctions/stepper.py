@@ -74,6 +74,8 @@ class Stepper:
                         next_lane_ref,
                         t_excess * next_lane_speed_limit,
                     )
+                else:
+                    next_vehicle_positions.remove(id[vehicle_index])
 
         self._vehicle_positions._storage = next_vehicle_positions._storage
         self._vehicle_positions._vehicle_storage_map = (

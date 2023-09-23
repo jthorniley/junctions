@@ -180,3 +180,96 @@ def test_clone():
         "lane_ref": LaneRef("road1", "a"),
         "position": 2.0,
     }
+
+
+def test_remove_vehicle():
+    # SET UP: create some vehicles
+    vehicle_positions = VehiclePositions()
+    a = vehicle_positions.create_vehicle(LaneRef("road1", "a"), 1.0)
+    b = vehicle_positions.create_vehicle(LaneRef("road1", "a"), 2.0)
+    c = vehicle_positions.create_vehicle(LaneRef("road1", "a"), 3.0)
+    d = vehicle_positions.create_vehicle(LaneRef("road1", "a"), 4.0)
+
+    # ACT: remove from middle
+    vehicle_positions.remove(b)
+
+    # ASSERT vehicle is gone:
+    with pytest.raises(KeyError):
+        vehicle_positions[b]
+
+    assert_array_equal(
+        vehicle_positions.ids_by_lane[LaneRef("road1", "a")], np.array([a, c, d])
+    )
+
+    # other vehicle are still correct
+    assert vehicle_positions[c] == {
+        "lane_ref": LaneRef("road1", "a"),
+        "position": pytest.approx(3.0),
+    }
+    # other vehicle are still correct
+    assert vehicle_positions[d] == {
+        "lane_ref": LaneRef("road1", "a"),
+        "position": pytest.approx(4.0),
+    }
+
+
+def test_remove_vehicle_from_end():
+    # SET UP: create some vehicles
+    vehicle_positions = VehiclePositions()
+    a = vehicle_positions.create_vehicle(LaneRef("road1", "a"), 1.0)
+    b = vehicle_positions.create_vehicle(LaneRef("road1", "a"), 2.0)
+    c = vehicle_positions.create_vehicle(LaneRef("road1", "a"), 3.0)
+    d = vehicle_positions.create_vehicle(LaneRef("road1", "a"), 4.0)
+
+    # ACT: remove from end
+    vehicle_positions.remove(d)
+
+    # ASSERT vehicle is gone:
+    with pytest.raises(KeyError):
+        vehicle_positions[d]
+
+    assert_array_equal(
+        vehicle_positions.ids_by_lane[LaneRef("road1", "a")], np.array([a, b, c])
+    )
+
+    # other vehicle are still correct
+    assert vehicle_positions[c] == {
+        "lane_ref": LaneRef("road1", "a"),
+        "position": pytest.approx(3.0),
+    }
+    # other vehicle are still correct
+    assert vehicle_positions[b] == {
+        "lane_ref": LaneRef("road1", "a"),
+        "position": pytest.approx(2.0),
+    }
+
+
+def test_remove_vehicle_from_start():
+    # SET UP: create some vehicles
+    vehicle_positions = VehiclePositions()
+    a = vehicle_positions.create_vehicle(LaneRef("road1", "a"), 1.0)
+    b = vehicle_positions.create_vehicle(LaneRef("road1", "a"), 2.0)
+    c = vehicle_positions.create_vehicle(LaneRef("road1", "a"), 3.0)
+    d = vehicle_positions.create_vehicle(LaneRef("road1", "a"), 4.0)
+
+    # ACT: remove from start
+    vehicle_positions.remove(a)
+
+    # ASSERT vehicle is gone:
+    with pytest.raises(KeyError):
+        vehicle_positions[a]
+
+    assert_array_equal(
+        vehicle_positions.ids_by_lane[LaneRef("road1", "a")], np.array([b, c, d])
+    )
+
+    # other vehicle are still correct
+    assert vehicle_positions[c] == {
+        "lane_ref": LaneRef("road1", "a"),
+        "position": pytest.approx(3.0),
+    }
+    # other vehicle are still correct
+    assert vehicle_positions[d] == {
+        "lane_ref": LaneRef("road1", "a"),
+        "position": pytest.approx(4.0),
+    }
