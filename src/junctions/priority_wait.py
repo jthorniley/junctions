@@ -15,14 +15,16 @@ def priority_wait(network: Network, vehicle_positions: VehiclePositions) -> Wait
         for priority_lane in junction.priority_over_lane(current_lane_ref.lane):
             priority_lane_ref = LaneRef(current_lane_ref.junction, priority_lane)
 
-            if len(vehicle_positions.by_lane[priority_lane_ref]):
+            if len(vehicle_positions.positions_by_lane[priority_lane_ref]):
                 wait_flags[current_lane_ref] = True
                 break
 
             for feeder_lane_ref in network.feeder_lanes(priority_lane_ref):
                 feeder_lane = network.lane(feeder_lane_ref)
 
-                vehicles_on_feeder_lane = vehicle_positions.by_lane[feeder_lane_ref]
+                vehicles_on_feeder_lane = vehicle_positions.positions_by_lane[
+                    feeder_lane_ref
+                ]
 
                 if vehicles_on_feeder_lane.shape[0] > 0:
                     # Only the last vehicle position is relevant - if its not

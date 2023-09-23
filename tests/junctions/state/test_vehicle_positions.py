@@ -18,8 +18,8 @@ def test_vehicle_positions():
     road_b = LaneRef(junction="road", lane="b")
 
     # act/assert - getting the lane refs is empty
-    assert vehicle_positions.by_lane[road_a].shape == (0,)
-    assert vehicle_positions.by_lane[road_b].shape == (0,)
+    assert vehicle_positions.positions_by_lane[road_a].shape == (0,)
+    assert vehicle_positions.positions_by_lane[road_b].shape == (0,)
 
 
 def test_add_vehicle():
@@ -37,8 +37,10 @@ def test_add_vehicle():
     v5 = vehicle_positions.create_vehicle(road_a, 2.1)
 
     # ASSERT: can recall the positions, they come out sorted
-    assert_almost_equal(vehicle_positions.by_lane[road_a], [1.0, 2.0, 2.1, 3.0])
-    assert_almost_equal(vehicle_positions.by_lane[road_b], [0.5])
+    assert_almost_equal(
+        vehicle_positions.positions_by_lane[road_a], [1.0, 2.0, 2.1, 3.0]
+    )
+    assert_almost_equal(vehicle_positions.positions_by_lane[road_b], [0.5])
 
     assert_array_equal(
         vehicle_positions.ids_by_lane[road_a], np.array([v2, v1, v5, v3])
@@ -72,7 +74,9 @@ def test_vehicle_position_sort(_fuzz):
 
     # Assert - the list should be sorted when retrieved
     sorted_values = np.array(sorted(values), dtype=np.float32)
-    assert_almost_equal(vehicle_positions.by_lane[LaneRef("a", "a")], sorted_values)
+    assert_almost_equal(
+        vehicle_positions.positions_by_lane[LaneRef("a", "a")], sorted_values
+    )
 
 
 def test_move_to_new_lane():
@@ -91,7 +95,7 @@ def test_move_to_new_lane():
     # ASSERT:
     # non-switched vehicles have not changed...
     assert_almost_equal(
-        vehicle_positions.by_lane[lane_1], [0.0, 1.0, 2.0, 4.0, 7.0, 8.0, 9.0]
+        vehicle_positions.positions_by_lane[lane_1], [0.0, 1.0, 2.0, 4.0, 7.0, 8.0, 9.0]
     )
     assert_array_equal(
         vehicle_positions.ids_by_lane[lane_1],
@@ -138,7 +142,7 @@ def test_move_to_new_lane():
     }
 
     # Switched vehicles are on new lane, in position order
-    assert_almost_equal(vehicle_positions.by_lane[lane_2], [0.0, 2.0, 3.0])
+    assert_almost_equal(vehicle_positions.positions_by_lane[lane_2], [0.0, 2.0, 3.0])
     assert_array_equal(
         vehicle_positions.ids_by_lane[lane_2],
         np.array([vehicles[3], vehicles[5], vehicles[6]]),
@@ -164,11 +168,15 @@ def test_clone():
 
     # ACT: clone the object, and move on the clone
     clone_vehicle_positions = vehicle_positions.copy()
-    clone_vehicle_positions.by_lane[LaneRef("road1", "a")][0] += 1
+    clone_vehicle_positions.positions_by_lane[LaneRef("road1", "a")][0] += 1
 
     # ASSERT: the clone reflects the move, the original doesnt
-    assert_almost_equal(clone_vehicle_positions.by_lane[LaneRef("road1", "a")], [2.0])
-    assert_almost_equal(vehicle_positions.by_lane[LaneRef("road1", "a")], [1.0])
+    assert_almost_equal(
+        clone_vehicle_positions.positions_by_lane[LaneRef("road1", "a")], [2.0]
+    )
+    assert_almost_equal(
+        vehicle_positions.positions_by_lane[LaneRef("road1", "a")], [1.0]
+    )
     assert_array_equal(
         clone_vehicle_positions.ids_by_lane[LaneRef("road1", "a")], np.array([v])
     )

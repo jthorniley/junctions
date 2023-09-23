@@ -53,7 +53,7 @@ class VehiclePositions:
         storage = self._storage[lane_ref]
 
         new_id = uuid.uuid4()
-        vehicle_index = np.searchsorted(self.by_lane[lane_ref], position)
+        vehicle_index = np.searchsorted(self.positions_by_lane[lane_ref], position)
 
         updated = np.hstack(
             (
@@ -89,7 +89,9 @@ class VehiclePositions:
         self._storage[old_lane_ref] = old_storage
 
         # Add to new lane
-        new_vehicle_index = int(np.searchsorted(self.by_lane[lane_ref], position))
+        new_vehicle_index = int(
+            np.searchsorted(self.positions_by_lane[lane_ref], position)
+        )
         new_storage = self._storage[lane_ref]
 
         new_storage = np.hstack(
@@ -127,7 +129,7 @@ class VehiclePositions:
         )
 
     @property
-    def by_lane(self) -> _VehiclePositionsByLane:
+    def positions_by_lane(self) -> _VehiclePositionsByLane:
         return _VehiclePositionsByLane(self._storage)
 
     @property
@@ -137,7 +139,7 @@ class VehiclePositions:
     def __getitem__(self, id: uuid.UUID) -> VehiclePosition:
         lane_ref, idx = self._vehicle_storage_map[id]
         return VehiclePosition(
-            {"lane_ref": lane_ref, "position": self.by_lane[lane_ref][idx]}
+            {"lane_ref": lane_ref, "position": self.positions_by_lane[lane_ref][idx]}
         )
 
     def group_by_lane(self) -> Iterable[tuple[LaneRef, np.ndarray]]:
