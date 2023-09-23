@@ -61,12 +61,16 @@ class Stepper:
 
             position[:] += movement
 
-        next_vehicle_positions = self._vehicle_positions.copy()
+        # lane switches needed
+        switch_lanes: list[tuple[uuid.UUID, LaneRef, float]] = []
+        # vehicles to remove from sim
+        remove: list[uuid.UUID] = []
 
-        for lane_ref in self._network.all_lanes():
-            position = self._vehicle_positions.by_lane[lane_ref]
-            id = self._vehicle_positions.ids_by_lane[lane_ref]
+        for lane_ref, vehicle_data in self._vehicle_positions.group_by_lane():
+            id = vehicle_data["id"]
+            position = vehicle_data["position"]
             lane_length = self._network.lane(lane_ref).length
+
             # Index where the vehicles are past the lane end
             lane_end_index = np.searchsorted(position, lane_length)
 
@@ -79,9 +83,7 @@ class Stepper:
                 if next_lane_ref:
                     if self._wait_flags[next_lane_ref]:
                         # Vehicle is stuck on the end of its current lane, no switch
-                        next_vehicle_positions.by_lane[lane_ref][
-                            vehicle_index
-                        ] = lane_length
+                        switch_lanes.append((vehicle_id, lane_ref, lane_length))
                     else:
                         # move vehicle to next lane, clear stored lane choice
                         del self._next_lane_choice[vehicle_id]
@@ -91,15 +93,18 @@ class Stepper:
 
                         next_lane_speed_limit = self._network.speed_limit(next_lane_ref)
 
-                        next_vehicle_positions.switch_lane(
-                            vehicle_id,
-                            next_lane_ref,
-                            t_excess * next_lane_speed_limit,
+                        switch_lanes.append(
+                            (
+                                vehicle_id,
+                                next_lane_ref,
+                                t_excess * next_lane_speed_limit,
+                            )
                         )
                 else:
-                    next_vehicle_positions.remove(vehicle_id)
+                    remove.append(vehicle_id)
 
-        self._vehicle_positions._storage = next_vehicle_positions._storage
-        self._vehicle_positions._vehicle_storage_map = (
-            next_vehicle_positions._vehicle_storage_map
-        )
+        for switch_lane in switch_lanes:
+            self._vehicle_positions.switch_lane(*switch_lane)
+
+        for vehicle_id in remove:
+            self._vehicle_positions.remove(vehicle_id)
