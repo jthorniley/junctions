@@ -67,7 +67,7 @@ def run():
         dt = time() - t
         t += dt
 
-        if random.random() < dt and last_new_vehicle_time < (t - 0.5):
+        if random.random() < dt / 2 and last_new_vehicle_time < (t - 0.5):
             choices = (
                 LaneRef("road1", "a"),
                 LaneRef("road2", "b"),
@@ -79,7 +79,7 @@ def run():
             vehicle_positions.create_vehicle(where, 0.0)
             last_new_vehicle_time = t
 
-        stepper.step(dt)
+        stepper.step(dt * 2)
 
         network_renderer = NetworkRenderer(network, stepper.wait_flags)
         vehicles_state_renderer = VehiclesStateRenderer(network, vehicle_positions)
