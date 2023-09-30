@@ -1,6 +1,9 @@
+from unittest.mock import patch
+
 import pytest
 from junctions.network import LaneRef, Network
 from junctions.state.vehicle_positions import VehiclePositions
+from junctions.state.wait_flags import WaitFlags
 from junctions.stepper import Stepper
 from junctions.types import Road
 
@@ -148,3 +151,39 @@ def test_stops_if_vehicles_are_on_top():
     # THEN only the one in front moves
     assert vehicles[v2]["position"] == pytest.approx(0.0)
     assert vehicles[v1]["position"] == pytest.approx(1.0)
+
+
+def test_stop_on_wait_flag():
+    # GIVEN: network with two roads
+    network = Network(default_speed_limit=10)
+    network.add_junction(Road((0, 0), 0, 10, 5), "road1")
+    network.add_junction(Road((10, 0), 0, 10, 5), "road2")
+    # connect a lane
+    network.connect_lanes(LaneRef("road1", "a"), LaneRef("road2", "a"))
+    # place vehicle on first lane
+    vehicles = VehiclePositions()
+    v1 = vehicles.create_vehicle(LaneRef("road1", "a"), 9)
+
+    # wait flag forced on second lane
+    mock_wait_flags = WaitFlags()
+    mock_wait_flags[LaneRef("road2", "a")] = True
+    with patch("junctions.stepper.priority_wait", return_value=mock_wait_flags):
+        # WHEN do a step
+        stepper = Stepper(network, vehicles)
+        stepper.step(0.2)
+
+        # THEN the vehicle gets stuck at the end of the first lane
+        assert vehicles[v1] == {
+            "lane_ref": LaneRef("road1", "a"),
+            "position": pytest.approx(10.0),
+        }
+
+        # WHEN we clear the wait flag and step
+        mock_wait_flags[LaneRef("road2", "a")] = False
+        stepper.step(0.2)
+
+        # THEN we step to next lane
+        assert vehicles[v1] == {
+            "lane_ref": LaneRef("road2", "a"),
+            "position": pytest.approx(2.0),
+        }
