@@ -7,8 +7,8 @@ from junctions.network import LaneRef, Network
 from junctions.state.wait_flags import WaitFlags
 from junctions.types import Arc, ArcLane, Junction, Lane, Road, Tee
 
-DEFAULT_LANE_COLOR: Final = (103, 240, 90, 255)
-WAIT_LANE_COLOR: Final = (243, 40, 90, 255)
+DEFAULT_LANE_COLOR: Final = (150, 150, 150, 255)
+WAIT_LANE_COLOR: Final = (243, 150, 150, 255)
 
 
 def _node_markers(
@@ -17,15 +17,15 @@ def _node_markers(
     a = pyglet.shapes.Circle(
         x=lane.start.x,
         y=lane.start.y,
-        radius=1.5,
-        color=(240, 200, 10, 255),
+        radius=1.2,
+        color=(240, 200, 200, 255),
         batch=batch,
     )
     b = pyglet.shapes.Circle(
         x=lane.end.x,
         y=lane.end.y,
-        radius=1.5,
-        color=(240, 200, 10, 255),
+        radius=1.2,
+        color=(240, 200, 200, 255),
         batch=batch,
     )
     return (a, b)

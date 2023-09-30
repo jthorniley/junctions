@@ -3,14 +3,14 @@ import random
 from time import time
 
 from junctions.network import LaneRef, Network
-from junctions.state.vehicles import Vehicle, VehiclesState
+from junctions.state.vehicle_positions import VehiclePositions
 from junctions.stepper import Stepper
 from junctions.types import Road, Tee
 from pyglet import app, window
 from pyglet.math import Mat4, Vec3
 
 from viewer.network_renderer import NetworkRenderer
-from viewer.vehicles_state_renderer import VehiclesStateRenderer
+from viewer.vehicle_positions_renderer import VehiclePositionsRenderer
 
 
 def run():
@@ -50,24 +50,23 @@ def run():
     network.connect_lanes(LaneRef("tee1", "e"), LaneRef("road2", "a"))
     network.connect_lanes(LaneRef("tee1", "f"), LaneRef("road3", "a"))
 
-    stepper = Stepper(network)
+    vehicle_positions = VehiclePositions()
+    stepper = Stepper(network, vehicle_positions)
 
     # Double the scale
     win.view = Mat4.from_scale(Vec3(2, 2, 1))
 
     t = time()
-    vehicles_state = VehiclesState()
-    last_new_vehicle_time = t
 
     @win.event
     def on_draw():
-        nonlocal vehicles_state, t, last_new_vehicle_time
+        nonlocal vehicle_positions, t
         win.clear()
 
         dt = time() - t
         t += dt
 
-        if random.random() < dt and last_new_vehicle_time < (t - 0.5):
+        if random.random() < dt:
             choices = (
                 LaneRef("road1", "a"),
                 LaneRef("road2", "b"),
@@ -76,13 +75,12 @@ def run():
                 LaneRef("road3", "b"),
             )
             where = random.choice(choices)
-            vehicles_state.add_vehicle(Vehicle(where, 0.0))
-            last_new_vehicle_time = t
+            vehicle_positions.create_vehicle(where, 0.0)
 
-        vehicles_state = stepper.step(dt, vehicles_state)
+        stepper.step(dt * 2)
 
         network_renderer = NetworkRenderer(network, stepper.wait_flags)
-        vehicles_state_renderer = VehiclesStateRenderer(network, vehicles_state)
+        vehicles_state_renderer = VehiclePositionsRenderer(network, vehicle_positions)
         network_renderer.draw()
         vehicles_state_renderer.draw()
 
