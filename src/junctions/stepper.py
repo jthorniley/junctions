@@ -49,7 +49,7 @@ class Stepper:
 
     def _move_vehicles(self, dt: float):
         """Move all the vehicles according to the speed limit of the lane
-        they are on. Stop if they are blocked by a vehicle in front or a wait flag.
+        they are on. Stop if they are blocked by a vehicle in front.
         """
         for lane_ref, vehicle_data in self._vehicle_positions.group_by_lane():
             speed_limit = self._network.speed_limit(lane_ref)
