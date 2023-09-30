@@ -31,7 +31,11 @@ class RemoveVehicle:
 
 
 class Stepper:
-    """Utility for stepping the simulation in time"""
+    """Utility for stepping the simulation in time
+
+
+    The algorithm is defined in doc/03-vehicles.md
+    """
 
     def __init__(self, network: Network, vehicle_positions: VehiclePositions) -> None:
         self._network = network
@@ -68,15 +72,22 @@ class Stepper:
         * If the next lane is clear (no wait flag) move onto it
         * If the next lane has a wait flag, stop at the end of current lane
 
+        We return a list of changes to make as a set to be applied after all
+        changes have been calculated. This allows us to modify the storage
+        in-place and not have a copy, but avoid modifying the state during
+        the initial iteration which could cause inconsistent calculations.
+
         """
         changes = []
 
         for lane_ref, vehicle_data in self._vehicle_positions.group_by_lane():
+            # iterator each lane (lane_ref) and the vehicles on that lane
             id = vehicle_data["id"]
             position = vehicle_data["position"]
             lane_length = self._network.lane(lane_ref).length
 
-            # Index where the vehicles are past the lane end
+            # Index where the vehicles are past the lane end - the lane data is
+            # sorted so vehicles after this index are past the end
             lane_end_index = np.searchsorted(position, lane_length)
 
             for vehicle_index in range(lane_end_index, position.shape[0]):

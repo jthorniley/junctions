@@ -88,13 +88,16 @@ would move it past the end:
 Each lane is given a speed limit, and normally a vehicle moves
 along the lane at that speed limit.
 
-It's fairly arbitrary but its probably easiest to think of the
-dimensions and speeds in terms of meters and meters/second. So a lane
-separation of 5 means a 5-meter wide road. A speed of 11 means 11 m/s.
+Though the simulation units could be anything, if we set the usual
+distances measure to be meters (so specifying e.g. lane separation of
+5 means 5 meters), then its natural to measure speeds in meters per
+second - a speed of 11 means 11 m/s.
 
-For reference some speed limits close to common real world values:
+For reference some speed values in meters/second close to common real
+world speed limits are:
 
-| m/s | k/mh | mph |
+
+| m/s | km/h | mph |
 | --- | ---- | --- |
 |   6 |   22 |  14 |
 |   9 |   32 |  20 |
