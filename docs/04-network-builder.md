@@ -19,104 +19,62 @@ We'll refer to the connection points of _junctions_ (rather
 than lanes) as terminals. For example, a road consists of
 two lanes, and therefore four connection nodes (lane a,
 start and end, and lane b, start and end). But at the 
-level of the junction, a road has a start terminal and end
-terminal, which we might connect to the start/end of another
-road. 
+level of the junction, a road has two _terminals_, which can
+connect to terminals of other junctions.
 
-Terminals are connection points and are used to constrain
-the placement and parameters of junctions, but don't need
-to be connected end-to-start like the nodes of lanes.
+A road junction is defined to have two terminals, `UP` and
+`DOWN`. The `DOWN` terminal is the end with the `a`-lane
+start and `b`-lane end, and the `UP` terminal is the other
+end of the road.
 
-## Creating new junction
+An arc can be defined equivalently (logically it has the 
+same terminals).
 
-A new road can be constrained at one or both terminals to 
-connect to another junction (we allow one terminal to be 
-left unconnected).
+A T junction has an extra terminal which for the sake of
+argument we will call `RIGHT` (a cross-roads junction
+would also have a `LEFT`).
 
-If connecting at one end, the new road will take its bearing
-from the terminal it is connecting to. If connecting at
-both ends, the bearing of both terminals will need to
-be the same, and they will need to be in line with each
-other so that a straight road can connect them.
+## Building junctions
 
-Similar logic applies for other junctions - arcs can 
-connect at one or both terminals, and T-junctions have
-up to three terminal connections.
+Junctions are created by specifying where the terminals of
+the junction should go, using either reference to existing
+terminals of junctions already in the network, or by giving
+explicit points (where we don't want to connect the terminal
+of the new junction to any existing terminal).
 
-## Optimizing to nearest result
+### Road with both terminals unconnected
 
-Where an exact fit to the constraints is not possible,
-the network builder optimises the closest fit.
+Given two vector coordinates $\vec{p}_{DOWN}$ and $\vec{p}_{UP}$
+representing the "picked" coordinates where we want to place the
+down and end terminals, we just define the road origin as
+$\vec{o}=\vec{p}_{DOWN}$ and the road vector 
 
-For a road with one terminal constrainted to an existing
-terminal and one left unconnected, the road must match
-the bearing of the existing terminal. If the specified point
-for the unconnected terminal does not lie along that 
-bearing, we have an optimisation problem to find the closest
-unconnected point that is valid.
+$$\vec{v}=\vec{p}_{UP}-\vec{p}_{DOWN}$$
 
-Minimise the distance from the desired end point to the
-actual end point as a function of road length: 
+The road parameters are its length $l=|\vec{v}|$ and bearing
+$\theta=\arctan\frac{v_x}{v_y}$. We also need to determine the
+lane separation either explicitly or using a default, as it
+is not constrained by the two picked points.
 
-$$f(l)= |\vec{p}-(\vec{o} + l\vec{u})|$$
-$$=\sqrt{(p_x-o_x-l\sin{\theta})^2+(p_y-o_y-l\cos{\theta})^2}$$
-Where:
+### Road with one terminal connected to an existing junction
 
-* $l$ = length of the new road
-* $p$ = the desired target point
-* $o + lu$ = the actual end of the road (origin plus length 
-  times unit vector of the road, derived from the
-  constrained bearing).
+Assume that the connected terminal is `DOWN` and the 
+unconstrained target point $\vec{p}_{UP}$ is as before a chosen
+desired point for the `UP` terminal.
 
-The derivative is
+The bearing $\theta$ and origin $\vec{o}$ will be directly taken 
+from the terminal that `DOWN` is connected to so that the road
+lines up with the junction it has been specified to connect to.
+We can also assume that the lane separation must be specified
+by the junction/terminal that we are connecting to.
 
-$$f'(l)= \frac{
-    -\sin{\theta}(p_x-o_x-l\sin{\theta})-\cos{\theta}(p_y-o_y-l\cos{\theta})
-}{\sqrt{(p_x-o_x-l\sin{\theta})^2+(p_y-o_y-l\cos{\theta})^2}}$$
+The problem is over-constrained in that the picked vector
+for the road $\vec{p}_{UP}-\vec{o}$ may not have the same bearing
+as the required $\theta$. Therefore we take the component of the
+picked vector in line with $\theta$ - the road vector $\vec{v}$
+is calculated with the dot product:
 
-Setting the derivative equal to 0:
+$$ \vec{v}=[\sin\theta, \cos\theta] \cdot (\vec{p}_{UP}-\vec{o}) $$
 
-$$
-0=\sin{\theta}(p_x-o_x-l\sin{\theta})+\cos{\theta}(p_y-o_y-l\cos{\theta})
-$$
-
-Collect terms and solve for $l$
-
-$$
-l\sin^2\theta + l\cos^2\theta = \sin\theta\cdot(p_x-o_x) + \cos\theta\cdot(p_y-o_y)
-$$
-
-
-$$
-l=\frac{ \sin\theta\cdot(p_x-o_x) + \cos\theta\cdot(p_y-o_y)}{\sin^2\theta + \cos^2\theta}
-$$
-
-
-## Proposing and committing a new junction
-
-Given an existing network, we can specify a new junction
-that isn't possible to construct within the constraints
-described above. In order to let the network builder check
-the constraints without modifying the network to become
-invalid, there is a two-stage process. First the constraints
-are checked and applied to create a new junction proposal,
-and if that is valid we can choose whether or not to
-"commit it" and update the network.
-
-```python
-
-network = Network()
-network.add_junction(Road((0,0), length=50, lane_separation=5))
-
-network_builder = NetworkBuilder()
-proposal = network_builder.propose(Road, [
-    ConnectTerminals(Terminal.START, "road1", Terminal.END),
-    UnconnectedTerminal(Terminal.END, (100, 0))
-])
-
-assert proposal.can_commit  # Checks if the proposal is valid
-proposal.commit(label="road2")
-assert network.get_junction("road2") # Now added to network
-```
-
+And then as before $l=|\vec{v}|$.
 
