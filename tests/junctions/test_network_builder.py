@@ -26,13 +26,13 @@ def test_add_road_to_existing():
         Road,
         [
             ConnectTerminal(Terminal.DOWN, Terminal.UP, "road1"),
-            NotConnected(Terminal.UP, (130, 0)),
+            NotConnected(Terminal.UP, (0, 130)),
         ],
     )
 
     assert proposal.can_commit
     proposed_road: Road = proposal.junction
-    assert proposed_road.origin == (pytest.approx(100), pytest.approx(0))
+    assert proposed_road.origin == (pytest.approx(0), pytest.approx(100))
     assert proposed_road.road_length == pytest.approx(30)
     assert proposed_road.bearing == pytest.approx(0)
     assert proposed_road.lane_separation == pytest.approx(5)
