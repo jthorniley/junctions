@@ -1,5 +1,3 @@
-from pickletools import pyset
-
 import pytest
 from junctions.network import Network
 from junctions.network_builder import (
@@ -25,8 +23,38 @@ def test_add_road_to_existing():
     proposal = network_builder.propose(
         Road,
         [
-            ConnectTerminal(Terminal.DOWN, Terminal.UP, "road1"),
-            NotConnected(Terminal.UP, (0, 130)),
+            ConnectTerminal(Terminal.UP, "road1"),
+            NotConnected((0, 130)),
+        ],
+    )
+
+    assert proposal.can_commit
+    proposed_road: Road = proposal.junction
+    assert proposed_road.origin == (pytest.approx(0), pytest.approx(100))
+    assert proposed_road.road_length == pytest.approx(30)
+    assert proposed_road.bearing == pytest.approx(0)
+    assert proposed_road.lane_separation == pytest.approx(5)
+
+
+def test_add_road_to_existing_reverse():
+    """
+    As add_road_to_existing, but the connections can be specified in reverse order
+    (does not affect result)
+
+    GIVEN one road in the network
+    WHEN I propose another one in line with the existing
+    THEN the proposal is valid
+    """
+    network = Network()
+    network_builder = NetworkBuilder(network)
+
+    network.add_junction(Road((0, 0), 0, 100, 5), label="road1")
+
+    proposal = network_builder.propose(
+        Road,
+        [
+            ConnectTerminal(Terminal.UP, "road1"),
+            NotConnected((0, 130)),
         ],
     )
 
