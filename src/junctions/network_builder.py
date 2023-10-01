@@ -91,6 +91,14 @@ class NetworkBuilder:
 
                 picked = Vec2(*point) - origin
                 v = Vec2(np.sin(bearing) * picked.x, np.cos(bearing) * picked.y)
+
+                if v[0] < 0:
+                    return Proposal(
+                        self._network,
+                        Road((origin.x, origin.y), bearing, 0, lane_separation),
+                        can_commit=False,
+                    )
+
                 length = v.mag
 
                 return Proposal(
