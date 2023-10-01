@@ -43,6 +43,55 @@ Similar logic applies for other junctions - arcs can
 connect at one or both terminals, and T-junctions have
 up to three terminal connections.
 
+## Optimizing to nearest result
+
+Where an exact fit to the constraints is not possible,
+the network builder optimises the closest fit.
+
+For a road with one terminal constrainted to an existing
+terminal and one left unconnected, the road must match
+the bearing of the existing terminal. If the specified point
+for the unconnected terminal does not lie along that 
+bearing, we have an optimisation problem to find the closest
+unconnected point that is valid.
+
+Minimise the distance from the desired end point to the
+actual end point as a function of road length: 
+
+$$f(l)= |\vec{p}-(\vec{o} + l\vec{u})|$$
+$$=\sqrt{(p_x-o_x-l\sin{\theta})^2+(p_y-o_y-l\cos{\theta})^2}$$
+Where:
+
+* $l$ = length of the new road
+* $p$ = the desired target point
+* $o + lu$ = the actual end of the road (origin plus length 
+  times unit vector of the road, derived from the
+  constrained bearing).
+
+The derivative is
+
+$$f'(l)= \frac{
+    -\sin{\theta}(p_x-o_x-l\sin{\theta})-\cos{\theta}(p_y-o_y-l\cos{\theta})
+}{\sqrt{(p_x-o_x-l\sin{\theta})^2+(p_y-o_y-l\cos{\theta})^2}}$$
+
+Setting the derivative equal to 0:
+
+$$
+0=\sin{\theta}(p_x-o_x-l\sin{\theta})+\cos{\theta}(p_y-o_y-l\cos{\theta})
+$$
+
+Collect terms and solve for $l$
+
+$$
+l\sin^2\theta + l\cos^2\theta = \sin\theta\cdot(p_x-o_x) + \cos\theta\cdot(p_y-o_y)
+$$
+
+
+$$
+l=\frac{ \sin\theta\cdot(p_x-o_x) + \cos\theta\cdot(p_y-o_y)}{\sin^2\theta + \cos^2\theta}
+$$
+
+
 ## Proposing and committing a new junction
 
 Given an existing network, we can specify a new junction
