@@ -71,10 +71,13 @@ by the junction/terminal that we are connecting to.
 The problem is over-constrained in that the picked vector
 for the road $\vec{p}_{UP}-\vec{o}$ may not have the same bearing
 as the required $\theta$. Therefore we take the component of the
-picked vector in line with $\theta$ - the road vector $\vec{v}$
-is calculated with the dot product:
+picked vector in line with $\theta$, and use the dot product
+to find the length:
 
-$$ \vec{v}=[\sin\theta, \cos\theta] \cdot (\vec{p}_{UP}-\vec{o}) $$
+$$ l=[\sin\theta, \cos\theta] \cdot (\vec{p}_{UP}-\vec{o}) $$
 
-And then as before $l=|\vec{v}|$.
-
+Note that we don't allow $l<0$ which would imply to road 
+actually goes in the opposite direction to the bearing. This
+would happen if the picked point is "behind" the origin when
+facing in the direction of the bearing. If $l < 0$ we mark
+the proposed road as invalid.

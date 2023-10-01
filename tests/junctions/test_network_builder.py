@@ -128,8 +128,8 @@ def test_add_road_cannot_turn_back():
         Road,
         [
             ConnectTerminal(Terminal.UP, "road1"),
-            # target point on the other side
-            NotConnected((20, 10)),
+            # target point (just) on the other side
+            NotConnected((-9.9, -9)),
         ],
     )
 
