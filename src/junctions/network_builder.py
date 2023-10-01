@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Generic, Iterable, TypeAlias, TypeVar
 
+from junctions.network import Network
 from junctions.types import Junction
 
 T = TypeVar("T", bound=Junction)
@@ -37,6 +38,7 @@ Constraint: TypeAlias = ConnectTerminal | NotConnected
 
 @dataclass
 class Proposal(Generic[T]):
+    network: Network
     junction: T
     can_commit: bool
 
@@ -45,6 +47,9 @@ class Proposal(Generic[T]):
 
 
 class NetworkBuilder:
+    def __init__(self, network: Network) -> None:
+        self._network = network
+
     def propose(
         self, junction_cls: type[T], constraints: Iterable[Constraint]
     ) -> Proposal[T]:
