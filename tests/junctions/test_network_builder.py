@@ -55,8 +55,8 @@ def test_add_road_to_existing_reverse():
     proposal = network_builder.propose(
         Road,
         [
-            ConnectTerminal(Terminal.UP, "road1"),
             NotConnected((0, 130)),
+            ConnectTerminal(Terminal.UP, "road1"),
         ],
     )
 
